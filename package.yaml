@@ -1,0 +1,22 @@
+name: giggles-is-you
+version: 0.1
+
+ghc-options:
+  - -Wall
+  - -Wincomplete-uni-patterns
+  - -threaded
+  - -rtsopts
+  - '"-with-rtsopts=-N -T"'
+
+dependencies:
+  - JuicyPixels
+  - base
+  - gloss
+  - gloss-juicy
+  - transformers
+
+executables:
+  giggles-is-you:
+    main: Main.hs
+    source-dirs:
+      - src
