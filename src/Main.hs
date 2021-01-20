@@ -1,26 +1,24 @@
-{-# LANGUAGE FlexibleInstances, ViewPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 module Main where
 
 import Codec.Picture
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
 import GHC.Arr
-import Graphics.Gloss.Juicy
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
+import Graphics.Gloss.Juicy
+
+import CharChart
+import Pictures
+import Types
 
 
-type M = ExceptT String IO
-type P = (Float, Float)
-type W = (Float, Float)
-type I = (Int, Int)
-type Level = Array I Char
+levelCellSize :: CellSize
+levelCellSize = (3, 3)
 
-levelSize :: I
-levelSize = (3, 3)
-
-cellSize :: P
-cellSize = (32, 32)
+cellPixelSize :: PixelSize
+cellPixelSize = (32, 32)
 
 stringLevel :: [String]
 stringLevel
@@ -30,24 +28,24 @@ stringLevel
     ]
 
 level :: Level
-level = array ((0,0), levelSize - 1)
+level = array ((0,0), levelCellSize - 1)
   [ ((x,y), c)
   | (y, row) <- zip [0..] (reverse stringLevel)
   , (x, c) <- zip [0..] row
   ]
 
-drawLevel :: Level -> Picture
-drawLevel lvl
-  = translate2D (negate (totalSize / 2))
-  $ translate2D (cellSize / 2)
+drawLevel :: CharChart -> Level -> Picture
+drawLevel charChart lvl
+  = translate2D (negate (totalPixelSize / 2))
+  $ translate2D (cellPixelSize / 2)
   $ mconcat
   [ translate2D p $ rectangleWire 32 32
-                 <> scale2D 0.2 (text [lvl ! (i,j)])
+                 <> scale2D 0.2 (centeredText charChart [lvl ! (i,j)])
   | (i,j) <- indices lvl
-  , let p = cellSize * (fromIntegral i, fromIntegral j)
+  , let p = cellPixelSize * (fromIntegral i, fromIntegral j)
   ]
   where
-    totalSize = cellSize * fromIntegral2D levelSize
+    totalPixelSize = cellPixelSize * fromIntegral2D levelCellSize
 
 
 main :: IO ()
@@ -74,33 +72,11 @@ isDirKey KeyUp    = Just N
 isDirKey KeyDown  = Just S
 isDirKey _        = Nothing
 
-unitVector :: Dir -> P
+unitVector :: Num a => Dir -> (a, a)
 unitVector N = (0,1)
 unitVector E = (1,0)
 unitVector W = (-1,0)
 unitVector S = (0,-1)
-
-instance Num a => Num (a,a) where
-  (x1,y1) + (x2,y2) = (x1+x2, y1+y2)
-  (x1,y1) * (x2,y2) = (x1*x2, y1*y2)
-  abs (x,y) = (abs x, abs y)
-  fromInteger x = (fromInteger x, fromInteger x)
-  negate (x,y) = (negate x, negate y)
-  signum (x,y) = (signum x, signum y)
-
-instance Fractional a => Fractional (a,a) where
-  fromRational x = (fromRational x, fromRational x)
-  recip (x,y) = (recip x, recip y)
-
-fromIntegral2D :: (Integral a, Num b)
-               => (a, a) -> (b, b)
-fromIntegral2D (x, y) = (fromIntegral x, fromIntegral y)
-
-translate2D :: (Float, Float) -> Picture -> Picture
-translate2D = uncurry translate
-
-scale2D :: (Float, Float) -> Picture -> Picture
-scale2D = uncurry scale
 
 reactWorld :: Event -> W -> W
 reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _) w
@@ -113,12 +89,13 @@ main' = do
   r2 <- ExceptT $ readImage "assets/images/sheets.png"
   giggles <- mustBeJust $ fromDynamicImage r1
   sheets  <- mustBeJust $ fromDynamicImage r2
+  charChart <- lift loadCharChart
   let animation :: Float -> Picture
       animation t = translate (10*t) 0 giggles
                  <> sheets
   let displayWorld :: W -> Picture
       displayWorld (x,y) = translate x y giggles
-                        <> drawLevel level
+                        <> drawLevel charChart level
   let stepWorld :: Float -> W -> W
       stepWorld dt (x,y) = (x, y)
 

@@ -9,7 +9,9 @@ ghc-options:
   - '"-with-rtsopts=-N -T"'
 
 dependencies:
+  - GLUT
   - JuicyPixels
+  - OpenGLRaw
   - base
   - gloss
   - gloss-juicy
