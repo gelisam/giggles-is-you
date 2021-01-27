@@ -36,8 +36,7 @@ level = array ((0,0), levelCellSize - 1)
 
 drawLevel :: CharChart -> Level -> Picture
 drawLevel charChart lvl
-  = translate2D (negate (totalPixelSize / 2))
-  $ translate2D (cellPixelSize / 2)
+  = translate2D (negate (recenter cellPixelSize totalPixelSize))
   $ mconcat
   [ translate2D p $ rectangleWire 32 32
                  <> scale2D 0.2 (centeredText charChart [lvl ! (i,j)])
@@ -90,12 +89,14 @@ main' = do
   giggles <- mustBeJust $ fromDynamicImage r1
   sheets  <- mustBeJust $ fromDynamicImage r2
   charChart <- lift loadCharChart
-  let animation :: Float -> Picture
-      animation t = translate (10*t) 0 giggles
-                 <> sheets
+  --let displayWorld :: W -> Picture
+  --    displayWorld (x,y) = translate x y giggles
+  --                      <> drawLevel charChart level
   let displayWorld :: W -> Picture
-      displayWorld (x,y) = translate x y giggles
-                        <> drawLevel charChart level
+      displayWorld (x,y) = boxedText charChart "GIG\nGLES" cellPixelSize
+                        <> uncurry rectangleWire cellPixelSize
+                        <> circle 2
+
   let stepWorld :: Float -> W -> W
       stepWorld dt (x,y) = (x, y)
 
