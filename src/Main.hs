@@ -1,4 +1,4 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RecordWildCards, ViewPatterns #-}
 module Main where
 
 import Codec.Picture
@@ -9,42 +9,10 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 import Graphics.Gloss.Juicy
 
+import Assets
 import CharChart
-import Pictures
+import Draw
 import Types
-
-
-levelCellSize :: CellSize
-levelCellSize = (3, 3)
-
-cellPixelSize :: PixelSize
-cellPixelSize = (32, 32)
-
-stringLevel :: [String]
-stringLevel
-  = [ "SSG"
-    , "SGG"
-    , "SSS"
-    ]
-
-level :: Level
-level = array ((0,0), levelCellSize - 1)
-  [ ((x,y), c)
-  | (y, row) <- zip [0..] (reverse stringLevel)
-  , (x, c) <- zip [0..] row
-  ]
-
-drawLevel :: CharChart -> Level -> Picture
-drawLevel charChart lvl
-  = translate2D (negate (recenter cellPixelSize totalPixelSize))
-  $ mconcat
-  [ translate2D p $ rectangleWire 32 32
-                 <> scale2D 0.2 (centeredText charChart [lvl ! (i,j)])
-  | (i,j) <- indices lvl
-  , let p = cellPixelSize * (fromIntegral i, fromIntegral j)
-  ]
-  where
-    totalPixelSize = cellPixelSize * fromIntegral2D levelCellSize
 
 
 main :: IO ()
@@ -77,9 +45,15 @@ unitVector E = (1,0)
 unitVector W = (-1,0)
 unitVector S = (0,-1)
 
-reactWorld :: Event -> W -> W
-reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _) w
-  = w + 10 * unitVector dir
+reactWorld :: Event -> World -> World
+reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
+           w@(World {..})
+  = w
+  { playerPos = newPlayerPos
+  , level = level // [(playerPos, ' '), (newPlayerPos, 'G')]
+  }
+  where
+    newPlayerPos =playerPos + unitVector dir
 reactWorld _ w = w
 
 main' :: M ()
@@ -89,21 +63,14 @@ main' = do
   giggles <- mustBeJust $ fromDynamicImage r1
   sheets  <- mustBeJust $ fromDynamicImage r2
   charChart <- lift loadCharChart
-  --let displayWorld :: W -> Picture
-  --    displayWorld (x,y) = translate x y giggles
-  --                      <> drawLevel charChart level
-  let displayWorld :: W -> Picture
-      displayWorld (x,y) = boxedText charChart "GIG\nGLES" cellPixelSize
-                        <> uncurry rectangleWire cellPixelSize
-                        <> circle 2
-
-  let stepWorld :: Float -> W -> W
-      stepWorld dt (x,y) = (x, y)
+  let assets = Assets {..}
+  let stepWorld :: Float -> World -> World
+      stepWorld _dt world = world
 
   lift $ play (InWindow "Giggles is you" (200, 200) (-10, 10))
               white
               30
-              (0, 0)
-              displayWorld
+              (World level1 (0, 1))
+              (displayWorld assets)
               reactWorld
               stepWorld

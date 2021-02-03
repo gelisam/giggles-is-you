@@ -14,8 +14,12 @@ type PixelSize = (Float, Float)
 type CellPos = (Int, Int)
 type CellSize = (Int, Int)
 
-type W = (Float, Float)
 type Level = Array CellPos Char
+
+data World = World
+  { level     :: Level
+  , playerPos :: CellPos
+  }
 
 
 instance Num a => Num (a,a) where

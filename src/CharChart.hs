@@ -46,7 +46,7 @@ centeredText charChart s
 -- draws it over multiple lines so it fits snuggly inside the given box.
 boxedText :: CharChart -> String -> PixelSize -> Picture
 boxedText charChart multilineString boxSize
-  = boxed (0, totalHeight) boxSize
+  = boxed (totalWidth, totalHeight) boxSize
   $ translate2D (recenter (0, fontHeight) (0, totalHeight))
   $ mconcat
   $ [ translate2D (fromIntegral y * (0, negate lineHeight))
@@ -66,3 +66,10 @@ boxedText charChart multilineString boxSize
     totalHeight :: Float
     totalHeight = fontHeight * fromIntegral (length strs)
                 + gapBetweenLines * fromIntegral (length strs - 1)
+
+    totalWidth :: Float
+    totalWidth = maximum
+               [ w
+               | s <- strs
+               , let (w, _h) = textPixelSize charChart s
+               ]
