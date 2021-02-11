@@ -1,10 +1,9 @@
-{-# LANGUAGE RecordWildCards, ViewPatterns #-}
+{-# LANGUAGE PatternGuards, RecordWildCards, ViewPatterns #-}
 module Main where
 
 import Codec.Picture
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
-import GHC.Arr
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 import Graphics.Gloss.Juicy
@@ -12,7 +11,9 @@ import Graphics.Gloss.Juicy
 import Assets
 import CharChart
 import Draw
+import Level
 import Types
+import World
 
 
 main :: IO ()
@@ -45,15 +46,18 @@ unitVector E = (1,0)
 unitVector W = (-1,0)
 unitVector S = (0,-1)
 
+lkp :: finiteMap -> Int -> Maybe Int
+lkp = undefined
+
 reactWorld :: Event -> World -> World
 reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
            w@(World {..})
+  | Just playerPos <- findSprite whatIsYou level
+  , let newPlayerPos = playerPos + unitVector dir
+  , inBounds newPlayerPos level
   = w
-  { playerPos = newPlayerPos
-  , level = level // [(playerPos, ' '), (newPlayerPos, 'G')]
+  { level = moveSprite playerPos newPlayerPos level
   }
-  where
-    newPlayerPos =playerPos + unitVector dir
 reactWorld _ w = w
 
 main' :: M ()
@@ -70,7 +74,7 @@ main' = do
   lift $ play (InWindow "Giggles is you" (200, 200) (-10, 10))
               white
               30
-              (World level1 (0, 1))
+              (World level1 'B')
               (displayWorld assets)
               reactWorld
               stepWorld

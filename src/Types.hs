@@ -3,7 +3,6 @@
 module Types where
 
 import Control.Monad.Trans.Except
-import GHC.Arr
 
 
 type M = ExceptT String IO
@@ -13,13 +12,6 @@ type PixelVector = (Float, Float)
 type PixelSize = (Float, Float)
 type CellPos = (Int, Int)
 type CellSize = (Int, Int)
-
-type Level = Array CellPos Char
-
-data World = World
-  { level     :: Level
-  , playerPos :: CellPos
-  }
 
 
 instance Num a => Num (a,a) where
