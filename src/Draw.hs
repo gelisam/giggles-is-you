@@ -12,7 +12,7 @@ import Types
 import World
 
 
-drawSprite :: Assets -> Sprite -> Picture
+drawSprite :: Assets -> Name -> Picture
 drawSprite (Assets {..}) 'S'
   = boxed (128, 128) cellPixelSize sheets
 drawSprite (Assets {..}) 'G'
@@ -21,8 +21,8 @@ drawSprite (Assets {..}) c
   = boxedText charChart [c] (cellPixelSize - 8)
 
 drawLevel :: Assets -> Level -> Picture
-drawLevel assets (Level {..})
-  = translate2D (negate (recenter cellPixelSize totalPixelSize))
+drawLevel assets lvl@(Level {..})
+  = translate2D (negate (recenter cellPixelSize (totalPixelSize lvl)))
   $ mconcat
   [ translate2D p $ ( color (greyN 0.8)
                     $ uncurry rectangleWire cellPixelSize
@@ -32,8 +32,8 @@ drawLevel assets (Level {..})
   , let p = cellPixelSize * (fromIntegral i, fromIntegral j)
   ]
 
-totalPixelSize :: PixelSize
-totalPixelSize = cellPixelSize * fromIntegral2D levelCellSize
+totalPixelSize :: Level -> PixelSize
+totalPixelSize lvl = cellPixelSize * fromIntegral2D (levelCellSize lvl)
 
 displayWorld :: Assets -> World -> Picture
 displayWorld assets@(Assets {..}) (World {..})

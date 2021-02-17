@@ -19,7 +19,8 @@ cellPixelSize = (48, 48)
 
 level1 :: Level
 level1 = parseLevel
-  [ "   "
-  , "GB "
-  , "   "
+  [ "S A   "
+  , "GBB   "
+  , "      "
+  , "  C   "
   ]
