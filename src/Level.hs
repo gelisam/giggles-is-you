@@ -35,6 +35,9 @@ parseLevel stringLevel = Level {..}
       | (i, s) <- assocs levelArray
       ]
 
+spriteAt :: Level -> CellPos -> Name
+spriteAt (Level {..}) p = levelArray ! p
+
 findSprite :: Name -> Level -> Maybe CellPos
 findSprite name (Level {..}) = lookup name levelList
 
@@ -88,10 +91,10 @@ levelCols = transpose . levelRows
 -- [(2,2), (2,1), (2,0)]
 -- [(3,2), (3,1), (3,0)]
 directedLevelIndices :: Dir -> Level -> [[CellPos]]
-directedLevelIndices N = levelCols
+directedLevelIndices N = fmap reverse . levelCols
 directedLevelIndices E = levelRows
 directedLevelIndices W = fmap reverse . levelRows
-directedLevelIndices S = fmap reverse . levelCols
+directedLevelIndices S = levelCols
 
 moveSpriteTo :: CellPos -> CellPos -> Level -> Level
 moveSpriteTo src dst (Level {..}) = Level

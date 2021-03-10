@@ -31,13 +31,34 @@ mustBeJust :: Maybe a -> M a
 mustBeJust Nothing = ExceptT $ pure $ Left "Nothing encountered"
 mustBeJust (Just a) = pure a
 
+compose :: [a -> a] -> a -> a
+compose = foldr (.) id
+
 moveSprites :: Dir -> Name -> Level -> Level
-moveSprites dir name level
-  | Just playerPos <- findSprite name level
-  , let newPlayerPos = playerPos + unitVector dir
-  , inBounds newPlayerPos level
-  = moveSpriteTo playerPos newPlayerPos level
-moveSprites _ _ level = level
+moveSprites dir name lvl = compose
+                             [ moveChunk chunk
+                             | chunk <- levelChunks
+                             ]
+                             lvl
+  where
+    levelChunks :: [[CellPos]]
+    levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
+
+    rowChunks :: [CellPos] -> [[CellPos]]
+    rowChunks [] = []
+    rowChunks (p:ps)
+      | spriteAt lvl p == name
+        = case rowChunks ps of
+            [] -> [[p]]
+            (chunk:chunks) -> ((p:chunk):chunks)
+      | otherwise
+        = rowChunks ps
+
+    moveChunk :: [CellPos] -> Level -> Level
+    moveChunk chunk = compose
+      [ moveSpriteTo p (p + unitVector dir)
+      | p <- chunk
+      ]
 
 applyRule :: Dir -> Rule -> Level -> Level
 applyRule dir (NameIsYou name) = moveSprites dir name
