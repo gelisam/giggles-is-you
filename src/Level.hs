@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Level where
 
+import Control.Monad
 import Data.List
 import GHC.Arr
 
@@ -96,12 +97,15 @@ directedLevelIndices E = levelRows
 directedLevelIndices W = fmap reverse . levelRows
 directedLevelIndices S = levelCols
 
-moveSpriteTo :: CellPos -> CellPos -> Level -> Level
-moveSpriteTo src dst (Level {..}) = Level
-  { levelArray = levelArray // [(src, ' '), (dst, name)]
-  , levelList  = ((name, dst):)
-               . delete (name, src)
-               $ levelList
-  }
+moveSpriteTo :: CellPos -> CellPos -> Level -> Maybe Level
+moveSpriteTo src dst lvl@(Level {..}) = do
+  guard (dst `inBounds` lvl)
+  guard (levelArray ! dst == ' ')
+  pure $ Level
+    { levelArray = levelArray // [(src, ' '), (dst, name)]
+    , levelList  = ((name, dst):)
+                 . delete (name, src)
+                 $ levelList
+    }
   where
     name = levelArray ! src

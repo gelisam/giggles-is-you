@@ -7,7 +7,8 @@ import Level
 
 data Rule
   = NameIsYou Name
-  deriving Show
+  | NameIsStop Name
+  deriving (Eq, Show)
 
 data World = World
   { level :: Level

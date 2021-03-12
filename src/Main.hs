@@ -1,4 +1,5 @@
 {-# LANGUAGE PatternGuards, RecordWildCards, ViewPatterns #-}
+{-# OPTIONS -Wno-name-shadowing #-}
 module Main where
 
 import Codec.Picture
@@ -34,45 +35,58 @@ mustBeJust (Just a) = pure a
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
 
-moveSprites :: Dir -> Name -> Level -> Level
-moveSprites dir name lvl = compose
-                             [ moveChunk chunk
-                             | chunk <- levelChunks
-                             ]
-                             lvl
+isYou :: [Rule] -> Name -> Bool
+isYou [] _
+  = False
+isYou (NameIsYou you : rules) name
+  = (name == you) || isYou rules name
+isYou (_ : rules) name
+  = isYou rules name
+
+moveYou :: [Rule] -> Dir -> Level -> Level
+moveYou rules dir lvl = compose
+    [ \lvl -> case moveChunk (reverse chunk) lvl of
+                Nothing -> lvl
+                Just lvl' -> lvl'
+    | chunk <- levelChunks
+    ]
+    lvl
   where
     levelChunks :: [[CellPos]]
     levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
 
+    isInChunk :: CellPos -> Bool
+    isInChunk p = isYou rules (spriteAt lvl p)
+
     rowChunks :: [CellPos] -> [[CellPos]]
-    rowChunks [] = []
-    rowChunks (p:ps)
-      | spriteAt lvl p == name
-        = case rowChunks ps of
-            [] -> [[p]]
-            (chunk:chunks) -> ((p:chunk):chunks)
-      | otherwise
-        = rowChunks ps
+    rowChunks row = case span (not . isInChunk) row of
+      ([], []) -> []
+      (_, rest) -> case span isInChunk rest of
+        (chunk, rest) -> chunk : rowChunks rest
 
-    moveChunk :: [CellPos] -> Level -> Level
-    moveChunk chunk = compose
-      [ moveSpriteTo p (p + unitVector dir)
-      | p <- chunk
-      ]
-
-applyRule :: Dir -> Rule -> Level -> Level
-applyRule dir (NameIsYou name) = moveSprites dir name
+    moveChunk :: [CellPos] -> Level -> Maybe Level
+    moveChunk [] lvl = do
+      pure lvl
+    moveChunk (p:chunk) lvl = do
+      lvl' <- moveSpriteTo p (p + unitVector dir) lvl
+      moveChunk chunk lvl'
 
 reactWorld :: Event -> World -> World
 reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
            w@(World {..})
   = w
-  { level = foldr (applyRule dir) level rules
+  { level = moveYou rules dir level
   }
-reactWorld (EventKey (Char c) Down _ _) w
-  = w
-  { rules = [NameIsYou c]
-  }
+reactWorld (EventKey (Char c) Down _ _)
+           w@(World {..})
+  | isYou rules c
+    = w
+    { rules = filter (/= NameIsYou c) rules
+    }
+  | otherwise
+    = w
+    { rules = NameIsYou c : rules
+    }
 reactWorld _ w = w
 
 main' :: M ()
@@ -86,10 +100,10 @@ main' = do
   let stepWorld :: Float -> World -> World
       stepWorld _dt world = world
 
-  lift $ play (InWindow "Giggles is you" (200, 200) (-10, 10))
+  lift $ play (InWindow "Giggles is you" (400, 300) (-10, 10))
               white
               30
-              (World level1 [])
+              (World level1 [NameIsYou 'B', NameIsYou 'G'])
               (displayWorld assets)
               reactWorld
               stepWorld
