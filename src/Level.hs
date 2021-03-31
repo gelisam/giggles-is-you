@@ -2,6 +2,7 @@
 module Level where
 
 import Control.Monad
+import Data.Char
 import Data.List
 import GHC.Arr
 
@@ -9,12 +10,36 @@ import Dir
 import Types
 
 
-type Name = Char
+type Name = String
+
+data Entity
+  = Object Name
+  | Text Name
+  deriving (Show, Eq)
 
 data Level = Level
-  { levelArray :: Array CellPos Name
-  , levelList  :: [(Name, CellPos)]
+  { levelArray :: Array CellPos (Maybe Entity)
+  , levelList  :: [(Entity, CellPos)]
   }
+
+parseEntity :: Char -> Maybe Entity
+parseEntity ' '
+  = Nothing
+parseEntity 'G'
+  = Just (Object "Giggles")
+parseEntity 'S'
+  = Just (Object "Sheets")
+parseEntity 'g'
+  = Just (Text "Giggles")
+parseEntity 's'
+  = Just (Text "Sheets")
+parseEntity 't'
+  = Just (Text "Text")
+parseEntity c
+  | isUpper c
+    = Just (Object [c])
+  | otherwise
+    = Just (Text [toUpper c])
 
 parseLevel :: [String] -> Level
 parseLevel stringLevel = Level {..}
@@ -23,23 +48,23 @@ parseLevel stringLevel = Level {..}
     stringLevelCellSize
       = (length (head stringLevel), length stringLevel)
 
-    levelArray :: Array CellPos Name
+    levelArray :: Array CellPos (Maybe Entity)
     levelArray = array ((0,0), stringLevelCellSize - 1)
-      [ ((x,y), c)
+      [ ((x,y), parseEntity c)
       | (y, row) <- zip [0..] (reverse stringLevel)
       , (x, c) <- zip [0..] row
       ]
 
-    levelList :: [(Name, CellPos)]
+    levelList :: [(Entity, CellPos)]
     levelList =
-      [ (s, i)
-      | (i, s) <- assocs levelArray
+      [ (e, i)
+      | (i, Just e) <- assocs levelArray
       ]
 
-spriteAt :: Level -> CellPos -> Name
+spriteAt :: Level -> CellPos -> Maybe Entity
 spriteAt (Level {..}) p = levelArray ! p
 
-findSprite :: Name -> Level -> Maybe CellPos
+findSprite :: Entity -> Level -> Maybe CellPos
 findSprite name (Level {..}) = lookup name levelList
 
 levelBounds :: Level -> (CellPos, CellPos)
@@ -99,13 +124,12 @@ directedLevelIndices S = levelCols
 
 moveSpriteTo :: CellPos -> CellPos -> Level -> Maybe Level
 moveSpriteTo src dst lvl@(Level {..}) = do
+  entity <- levelArray ! src
   guard (dst `inBounds` lvl)
-  guard (levelArray ! dst == ' ')
+  guard (levelArray ! dst == Nothing)
   pure $ Level
-    { levelArray = levelArray // [(src, ' '), (dst, name)]
-    , levelList  = ((name, dst):)
-                 . delete (name, src)
+    { levelArray = levelArray // [(src, Nothing), (dst, Just entity)]
+    , levelList  = ((entity, dst):)
+                 . delete (entity, src)
                  $ levelList
     }
-  where
-    name = levelArray ! src

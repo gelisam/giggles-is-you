@@ -4,7 +4,6 @@ import Graphics.Gloss
 
 import CharChart
 import Level
-import Types
 
 
 data Assets = Assets
@@ -14,13 +13,13 @@ data Assets = Assets
   }
 
 
-cellPixelSize :: PixelSize
-cellPixelSize = (48, 48)
+cellPixelSize :: Num a => a
+cellPixelSize = 48
 
 level1 :: Level
 level1 = parseLevel
   [ "S A     "
   , "G    BB "
-  , "        "
+  , " abgst  "
   , "BB  B   "
   ]

@@ -5,8 +5,8 @@ module Main where
 import Codec.Picture
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Except
-import Graphics.Gloss
-import Graphics.Gloss.Interface.IO.Interact
+import Graphics.Gloss hiding (Text)
+import Graphics.Gloss.Interface.IO.Interact hiding (Text)
 import Graphics.Gloss.Juicy
 
 import Assets
@@ -35,11 +35,15 @@ mustBeJust (Just a) = pure a
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
 
-isYou :: [Rule] -> Name -> Bool
+isYou :: [Rule] -> Entity -> Bool
 isYou [] _
   = False
-isYou (NameIsYou you : rules) name
-  = (name == you) || isYou rules name
+isYou (NameIsYou you : rules) e@(Object name)
+  = (you == name)
+ || isYou rules e
+isYou (NameIsYou you : rules) e@(Text _)
+  = (you == "Text")
+ || isYou rules e
 isYou (_ : rules) name
   = isYou rules name
 
@@ -56,7 +60,7 @@ moveYou rules dir lvl = compose
     levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
 
     isInChunk :: CellPos -> Bool
-    isInChunk p = isYou rules (spriteAt lvl p)
+    isInChunk p = maybe False (isYou rules) (spriteAt lvl p)
 
     rowChunks :: [CellPos] -> [[CellPos]]
     rowChunks row = case span (not . isInChunk) row of
@@ -77,15 +81,25 @@ reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
   = w
   { level = moveYou rules dir level
   }
-reactWorld (EventKey (Char c) Down _ _)
+reactWorld (EventKey (Char (parseEntity -> Just (Object name))) Down _ _)
            w@(World {..})
-  | isYou rules c
+  | isYou rules (Object name)
     = w
-    { rules = filter (/= NameIsYou c) rules
+    { rules = filter (/= NameIsYou name) rules
     }
   | otherwise
     = w
-    { rules = NameIsYou c : rules
+    { rules = NameIsYou name : rules
+    }
+reactWorld (EventKey (Char (parseEntity -> Just (Text "Text"))) Down _ _)
+           w@(World {..})
+  | isYou rules (Text "whatever")
+    = w
+    { rules = filter (/= NameIsYou "Text") rules
+    }
+  | otherwise
+    = w
+    { rules = NameIsYou "Text" : rules
     }
 reactWorld _ w = w
 
@@ -103,7 +117,7 @@ main' = do
   lift $ play (InWindow "Giggles is you" (400, 300) (-10, 10))
               white
               30
-              (World level1 [NameIsYou 'B', NameIsYou 'G'])
+              (World level1 [NameIsYou "B", NameIsYou "Giggles"])
               (displayWorld assets)
               reactWorld
               stepWorld
