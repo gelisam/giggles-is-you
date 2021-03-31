@@ -174,4 +174,10 @@ handle_reshape worldRef eventFn stateRef (width,height)
  = do   world  <- readIORef worldRef
         world' <- eventFn (EventResize (width, height)) world
         writeIORef worldRef world'
-        viewState_reshape stateRef (width, height)
+
+        -- for some reason, the viewport is erroneously set to one quarter of
+        -- the window instead of the full window when the program starts, and
+        -- that is fixed when we resize the window. commenting this out
+        -- mysteriously fixes the problem without introducing issues when the
+        -- window is resized?!
+        --viewState_reshape stateRef (width, height)
