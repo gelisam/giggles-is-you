@@ -1,5 +1,6 @@
 resolver: lts-16.26
 packages:
 - '.'
+- './gloss'
 extra-deps:
   - gloss-juicy-0.2.3
