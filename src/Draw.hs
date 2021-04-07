@@ -30,7 +30,7 @@ drawLevel assets lvl@(Level {..})
   [ translate2D p $ ( color (greyN 0.8)
                     $ uncurry rectangleWire cellPixelSize
                     )
-                 <> maybe mempty (drawSprite assets) (levelArray ! (i,j))
+                 <> foldMap (drawSprite assets) (levelArray ! (i,j))
   | (i,j) <- indices levelArray
   , let p = cellPixelSize * (fromIntegral i, fromIntegral j)
   ]

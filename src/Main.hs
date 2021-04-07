@@ -47,6 +47,18 @@ isYou (NameIsYou you : rules) e@(Text _)
 isYou (_ : rules) name
   = isYou rules name
 
+isStop :: [Rule] -> Entity -> Bool
+isStop [] _
+  = False
+isStop (NameIsStop you : rules) e@(Object name)
+  = (you == name)
+ || isStop rules e
+isStop (NameIsStop you : rules) e@(Text _)
+  = (you == "Text")
+ || isStop rules e
+isStop (_ : rules) name
+  = isStop rules name
+
 moveYou :: [Rule] -> Dir -> Level -> Level
 moveYou rules dir lvl = compose
     [ \lvl -> case moveChunk (reverse chunk) lvl of
@@ -59,20 +71,37 @@ moveYou rules dir lvl = compose
     levelChunks :: [[CellPos]]
     levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
 
-    isInChunk :: CellPos -> Bool
-    isInChunk p = maybe False (isYou rules) (spriteAt lvl p)
+    hasYous :: CellPos -> Bool
+    hasYous p = any (isYou rules) (spriteAt lvl p)
+
+    hasStops :: CellPos -> Bool
+    hasStops p = any (isStop rules) (spriteAt lvl p)
 
     rowChunks :: [CellPos] -> [[CellPos]]
-    rowChunks row = case span (not . isInChunk) row of
-      ([], []) -> []
-      (_, rest) -> case span isInChunk rest of
-        (chunk, rest) -> chunk : rowChunks rest
+    rowChunks = filter (not . null) . go []
+      where
+        go :: [CellPos] -> [CellPos] -> [[CellPos]]
+        go chunk []
+          = [chunk]
+        go chunk (p:ps)
+          | hasYous p && hasStops p
+            = go [p] ps
+          | hasYous p
+            = go (chunk ++ [p]) ps
+          | hasStops p
+            = go [] ps
+          | otherwise
+            = chunk : go [] ps
 
     moveChunk :: [CellPos] -> Level -> Maybe Level
     moveChunk [] lvl = do
       pure lvl
     moveChunk (p:chunk) lvl = do
-      lvl' <- moveSpriteTo p (p + unitVector dir) lvl
+      lvl' <- moveSpriteTo
+                (isYou rules)
+                p
+                (p + unitVector dir)
+                lvl
       moveChunk chunk lvl'
 
 reactWorld :: Event -> World -> World
@@ -117,7 +146,12 @@ main' = do
   lift $ play (InWindow "Giggles is you" (400, 300) (-10, 10))
               white
               30
-              (World level1 [NameIsYou "B", NameIsYou "Giggles"])
+              (World
+                level1
+                [ NameIsYou "B"
+                , NameIsYou "Giggles"
+                , NameIsStop "Text"
+                ])
               (displayWorld assets)
               reactWorld
               stepWorld

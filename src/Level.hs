@@ -1,9 +1,10 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections #-}
 module Level where
 
 import Control.Monad
 import Data.Char
 import Data.List
+import Data.Maybe
 import GHC.Arr
 
 import Dir
@@ -18,7 +19,7 @@ data Entity
   deriving (Show, Eq)
 
 data Level = Level
-  { levelArray :: Array CellPos (Maybe Entity)
+  { levelArray :: Array CellPos [Entity]  -- bottom to top
   , levelList  :: [(Entity, CellPos)]
   }
 
@@ -48,9 +49,9 @@ parseLevel stringLevel = Level {..}
     stringLevelCellSize
       = (length (head stringLevel), length stringLevel)
 
-    levelArray :: Array CellPos (Maybe Entity)
+    levelArray :: Array CellPos [Entity]
     levelArray = array ((0,0), stringLevelCellSize - 1)
-      [ ((x,y), parseEntity c)
+      [ ((x,y), maybeToList (parseEntity c))
       | (y, row) <- zip [0..] (reverse stringLevel)
       , (x, c) <- zip [0..] row
       ]
@@ -58,10 +59,11 @@ parseLevel stringLevel = Level {..}
     levelList :: [(Entity, CellPos)]
     levelList =
       [ (e, i)
-      | (i, Just e) <- assocs levelArray
+      | (i, es) <- assocs levelArray
+      , e <- es
       ]
 
-spriteAt :: Level -> CellPos -> Maybe Entity
+spriteAt :: Level -> CellPos -> [Entity]
 spriteAt (Level {..}) p = levelArray ! p
 
 findSprite :: Entity -> Level -> Maybe CellPos
@@ -122,14 +124,30 @@ directedLevelIndices E = levelRows
 directedLevelIndices W = fmap reverse . levelRows
 directedLevelIndices S = levelCols
 
-moveSpriteTo :: CellPos -> CellPos -> Level -> Maybe Level
-moveSpriteTo src dst lvl@(Level {..}) = do
-  entity <- levelArray ! src
+(///) :: forall i e. Ix i
+      => Array i e -> [(i, e -> e)] -> Array i e
+es /// ifs = es // ies
+  where
+    ies :: [(i, e)]
+    ies = fmap if2ie ifs
+
+    if2ie :: (i, e -> e) -> (i, e)
+    if2ie (i, f) = (i, f (es ! i))
+
+moveSpriteTo
+  :: (Entity -> Bool)
+  -> CellPos
+  -> CellPos
+  -> Level
+  -> Maybe Level
+moveSpriteTo moveable src dst lvl@(Level {..}) = do
+  let entities = filter moveable (levelArray ! src)
   guard (dst `inBounds` lvl)
-  guard (levelArray ! dst == Nothing)
   pure $ Level
-    { levelArray = levelArray // [(src, Nothing), (dst, Just entity)]
-    , levelList  = ((entity, dst):)
-                 . delete (entity, src)
-                 $ levelList
+    { levelArray = levelArray ///
+                 [ (src, filter (not . moveable))
+                 , (dst, (++ entities))
+                 ]
+    , levelList  = map (, dst) entities
+                ++ filter (not . moveable . fst) levelList
     }
