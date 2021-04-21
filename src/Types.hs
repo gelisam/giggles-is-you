@@ -7,6 +7,8 @@ import Control.Monad.Trans.Except
 
 type M = ExceptT String IO
 
+type Name = String
+
 type PixelPos = (Float, Float)
 type PixelVector = (Float, Float)
 type PixelSize = (Float, Float)

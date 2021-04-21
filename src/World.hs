@@ -1,15 +1,12 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS -Wno-orphans #-}
+{-# LANGUAGE RecordWildCards #-}
 module World where
 
+import Text.Read (readMaybe)
+
 import Level
+import Rules
 import Types
 
-
-data Rule
-  = NameIsYou Name
-  | NameIsStop Name
-  deriving (Eq, Show, Read)
 
 data World = World
   { windowSize :: PixelSize
@@ -17,3 +14,13 @@ data World = World
   , level :: Level
   , rules :: [Rule]
   }
+
+runCommand :: String -> World -> Maybe World
+runCommand cmd w@(World {..})
+  | take 1 cmd == "!"
+    , Just rule <- readMaybe (drop 1 cmd)
+    = Just $ w { rules = filter (/= rule) rules }
+  | Just rule <- readMaybe cmd
+    = Just $ w { rules = rule : rules }
+  | otherwise
+    = Nothing

@@ -11,8 +11,6 @@ import Dir
 import Types
 
 
-type Name = String
-
 data Entity
   = Object Name
   | Text Name
