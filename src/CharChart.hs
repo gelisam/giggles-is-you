@@ -68,8 +68,11 @@ boxedText charChart multilineString boxSize
                 + gapBetweenLines * fromIntegral (length strs - 1)
 
     totalWidth :: Float
-    totalWidth = maximum
-               [ w
-               | s <- strs
-               , let (w, _h) = textPixelSize charChart s
-               ]
+    totalWidth
+      | null strs
+        = 1
+      | otherwise
+        = maximum [ w
+                  | s <- strs
+                  , let (w, _h) = textPixelSize charChart s
+                  ]

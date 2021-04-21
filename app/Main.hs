@@ -8,6 +8,7 @@ import Control.Monad.Trans.Except
 import Graphics.Gloss hiding (Text)
 import Graphics.Gloss.Interface.IO.Interact hiding (Text)
 import Graphics.Gloss.Juicy
+import Text.Read (readMaybe)
 
 import Assets
 import CharChart
@@ -77,21 +78,32 @@ moveYou rules dir lvl = compose
     hasStops :: CellPos -> Bool
     hasStops p = any (isStop rules) (spriteAt lvl p)
 
+    -- X Y Z S
+    --
+    --     Y
+    --   X Z S
+    --
+    --
+    --     Y
+    -- W X S Z
+    --
+    --   W
+    --   X S Y Z
     rowChunks :: [CellPos] -> [[CellPos]]
     rowChunks = filter (not . null) . go []
       where
         go :: [CellPos] -> [CellPos] -> [[CellPos]]
-        go chunk []
-          = [chunk]
-        go chunk (p:ps)
+        go reversedChunk []
+          = [reverse reversedChunk]
+        go reversedChunk (p:ps)
           | hasYous p && hasStops p
-            = go [p] ps
+            = reverse (drop 1 reversedChunk) : go [p] ps
           | hasYous p
-            = go (chunk ++ [p]) ps
+            = go (p:reversedChunk) ps
           | hasStops p
-            = go [] ps
+            = reverse (drop 1 reversedChunk) : go [] ps
           | otherwise
-            = chunk : go [] ps
+            = reverse reversedChunk : go [] ps
 
     moveChunk :: [CellPos] -> Level -> Maybe Level
     moveChunk [] lvl = do
@@ -110,26 +122,35 @@ reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
   = w
   { level = moveYou rules dir level
   }
-reactWorld (EventKey (Char (parseEntity -> Just (Object name))) Down _ _)
-           w@(World {..})
-  | isYou rules (Object name)
-    = w
-    { rules = filter (/= NameIsYou name) rules
-    }
-  | otherwise
-    = w
-    { rules = NameIsYou name : rules
-    }
-reactWorld (EventKey (Char (parseEntity -> Just (Text "Text"))) Down _ _)
-           w@(World {..})
-  | isYou rules (Text "whatever")
-    = w
-    { rules = filter (/= NameIsYou "Text") rules
-    }
-  | otherwise
-    = w
-    { rules = NameIsYou "Text" : rules
-    }
+reactWorld (EventKey (Char c) Down _ _) w@(World {..})
+  = w
+  { debug = debug ++ [c]
+  }
+reactWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(World {..})
+  = w
+  { debug = debug ++ " "
+  }
+reactWorld (EventKey (SpecialKey KeyDelete) Down _ _) w@(World {..})
+  = w
+  { debug = take (length debug - 1) debug
+  }
+reactWorld (EventKey (SpecialKey KeyEnter) Down _ _) w@(World {..})
+  | take 1 debug == "!"
+  , Just rule <- readMaybe (drop 1 debug)
+  = w
+  { debug = ""
+  , rules = filter (/= rule) rules
+  }
+reactWorld (EventKey (SpecialKey KeyEnter) Down _ _) w@(World {..})
+  | Just rule <- readMaybe debug
+  = w
+  { debug = ""
+  , rules = rule : rules
+  }
+reactWorld (EventResize windowSize) w
+  = w
+  { windowSize = fromIntegral2D windowSize
+  }
 reactWorld _ w = w
 
 main' :: M ()
@@ -147,6 +168,8 @@ main' = do
               white
               30
               (World
+                (error "EventSize was not triggered before the first draw event")
+                ""
                 level1
                 [ NameIsYou "B"
                 , NameIsYou "Giggles"

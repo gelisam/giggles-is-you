@@ -17,8 +17,14 @@ dependencies:
   - gloss-juicy
   - transformers
 
+library:
+  source-dirs:
+    - src
+
 executables:
   giggles-is-you:
     main: Main.hs
     source-dirs:
-      - src
+      - app
+    dependencies:
+      - giggles-is-you

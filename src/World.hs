@@ -3,14 +3,17 @@
 module World where
 
 import Level
+import Types
 
 
 data Rule
   = NameIsYou Name
   | NameIsStop Name
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 data World = World
-  { level :: Level
+  { windowSize :: PixelSize
+  , debug :: String
+  , level :: Level
   , rules :: [Rule]
   }
