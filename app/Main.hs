@@ -14,8 +14,8 @@ import Dir
 import Draw
 import Rules
 import Types
+import UI
 import World
-
 
 main :: IO ()
 main = do
@@ -37,29 +37,39 @@ reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
   = w
   { level = moveYou rules dir level
   }
-reactWorld (EventKey (Char c) Down _ _) w@(World {..})
+reactWorld _ w
   = w
+
+reactUI :: Event -> UI -> UI
+reactUI (EventKey (Char c) Down _ _) ui@(UI {..})
+  = ui
   { debug = debug ++ [c]
   }
-reactWorld (EventKey (SpecialKey KeySpace) Down _ _) w@(World {..})
-  = w
+reactUI (EventKey (SpecialKey KeySpace) Down _ _) ui@(UI {..})
+  = ui
   { debug = debug ++ " "
   }
-reactWorld (EventKey (SpecialKey KeyDelete) Down _ _) w@(World {..})
-  = w
+reactUI (EventKey (SpecialKey KeyDelete) Down _ _) ui@(UI {..})
+  = ui
   { debug = take (length debug - 1) debug
   }
-reactWorld (EventKey (SpecialKey KeyEnter) Down _ _) w@(World {..})
-  = case runCommand debug w of
+reactUI (EventKey (SpecialKey KeyEnter) Down _ _) ui@(UI {..})
+  = case runCommand debug world of
       Just w'
-        -> w' { debug = "" }
+        -> ui
+         { debug = ""
+         , world = w'
+         }
       Nothing
-        -> w
-reactWorld (EventResize windowSize) w
-  = w
+        -> ui
+reactUI (EventResize windowSize) ui
+  = ui
   { windowSize = fromIntegral2D windowSize
   }
-reactWorld _ w = w
+reactUI event ui@(UI {..})
+  = ui
+  { world = reactWorld event world
+  }
 
 main' :: M ()
 main' = do
@@ -69,20 +79,19 @@ main' = do
   sheets  <- mustBeJust $ fromDynamicImage r2
   charChart <- lift loadCharChart
   let assets = Assets {..}
-  let stepWorld :: Float -> World -> World
-      stepWorld _dt world = world
 
   lift $ play (InWindow "Giggles is you" (400, 300) (-10, 10))
               white
               30
-              (World
+              (UI
                 (error "EventSize was not triggered before the first draw event")
                 ""
-                level1
-                [ NameIsYou "B"
-                , NameIsYou "Giggles"
-                , NameIsStop "Text"
-                ])
-              (displayWorld assets)
-              reactWorld
-              stepWorld
+                (World
+                  level1
+                  [ NameIsYou "B"
+                  , NameIsYou "Giggles"
+                  , NameIsStop "Text"
+                  ]))
+              (displayUI assets)
+              reactUI
+              (\_ ui -> ui)

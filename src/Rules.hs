@@ -56,17 +56,6 @@ moveYou rules dir lvl = compose
     hasStops :: CellPos -> Bool
     hasStops p = any (isStop rules) (spriteAt lvl p)
 
-    -- X Y Z S
-    --
-    --     Y
-    --   X Z S
-    --
-    --
-    --     Y
-    -- W X S Z
-    --
-    --   W
-    --   X S Y Z
     rowChunks :: [CellPos] -> [[CellPos]]
     rowChunks = filter (not . null) . go []
       where

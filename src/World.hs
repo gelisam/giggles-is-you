@@ -5,13 +5,10 @@ import Text.Read (readMaybe)
 
 import Level
 import Rules
-import Types
 
 
 data World = World
-  { windowSize :: PixelSize
-  , debug :: String
-  , level :: Level
+  { level :: Level
   , rules :: [Rule]
   }
 

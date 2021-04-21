@@ -9,6 +9,7 @@ import CharChart
 import Level
 import Pictures
 import Types
+import UI
 import World
 
 
@@ -41,6 +42,10 @@ totalPixelSize lvl = cellPixelSize * fromIntegral2D (levelCellSize lvl)
 displayWorld :: Assets -> World -> Picture
 displayWorld assets@(Assets {..}) (World {..})
   = drawLevel assets level
+
+displayUI :: Assets -> UI -> Picture
+displayUI assets@(Assets {..}) (UI {..})
+  = displayWorld assets world
  <> translate2D
       (0, snd windowSize / 2 - debugHeight / 2 - 3)
       (boxedText charChart debug (fst windowSize - 6, debugHeight))
