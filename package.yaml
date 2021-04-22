@@ -28,3 +28,12 @@ executables:
       - app
     dependencies:
       - giggles-is-you
+
+tests:
+  test-giggles-is-you:
+    main: Main.hs
+    source-dirs:
+      - test
+    dependencies:
+      - giggles-is-you
+      - mtl
