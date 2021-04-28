@@ -13,6 +13,7 @@ dependencies:
   - JuicyPixels
   - OpenGLRaw
   - base
+  - containers
   - gloss
   - gloss-juicy
   - transformers

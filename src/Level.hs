@@ -1,10 +1,11 @@
-{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections, ViewPatterns #-}
 module Level where
 
 import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Tuple
 import GHC.Arr
 
 import Dir
@@ -21,24 +22,47 @@ data Level = Level
   , levelList  :: [(Entity, CellPos)]
   }
 
+specialChars :: [(Char, Entity)]
+specialChars
+  = [ ('G', Object "Giggles")
+    , ('g', Text   "Giggles")
+    , ('S', Object "Sheets")
+    , ('s', Text   "Sheets")
+    , ('t', Text   "Text")
+    ]
+
+specialEntities :: [(Entity, Char)]
+specialEntities
+  = fmap swap specialChars
+
+isSpecialChar :: Char -> Maybe Entity
+isSpecialChar c
+  = lookup c specialChars
+
+isSpecialEntity :: Entity -> Maybe Char
+isSpecialEntity entity
+  = lookup entity specialEntities
+
 parseEntity :: Char -> Maybe Entity
 parseEntity ' '
   = Nothing
-parseEntity 'G'
-  = Just (Object "Giggles")
-parseEntity 'S'
-  = Just (Object "Sheets")
-parseEntity 'g'
-  = Just (Text "Giggles")
-parseEntity 's'
-  = Just (Text "Sheets")
-parseEntity 't'
-  = Just (Text "Text")
+parseEntity (isSpecialChar -> Just entity)
+  = Just entity
 parseEntity c
   | isUpper c
     = Just (Object [c])
   | otherwise
     = Just (Text [toUpper c])
+
+pprintEntity :: Maybe Entity -> Char
+pprintEntity Nothing
+  = ' '
+pprintEntity (Just (isSpecialEntity -> Just c))
+  = c
+pprintEntity (Just (Object [c]))
+  = c
+pprintEntity (Just (Text [c]))
+  = c
 
 parseLevel :: [String] -> Level
 parseLevel stringLevel = Level {..}
@@ -61,8 +85,8 @@ parseLevel stringLevel = Level {..}
       , e <- es
       ]
 
-spriteAt :: Level -> CellPos -> [Entity]
-spriteAt (Level {..}) p = levelArray ! p
+spritesAt :: Level -> CellPos -> [Entity]
+spritesAt (Level {..}) p = levelArray ! p
 
 findSprite :: Entity -> Level -> Maybe CellPos
 findSprite name (Level {..}) = lookup name levelList

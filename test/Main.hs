@@ -3,8 +3,10 @@ module Main where
 import Control.Monad.State
 import Control.Monad.Trans.Except
 import Data.Foldable (for_)
+import Data.Maybe (listToMaybe)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
+import qualified Data.Set as Set
 
 import Level
 import World
@@ -18,7 +20,7 @@ runTest :: [String] -> MyTest () -> IO ()
 runTest stringLevel myTest = do
   let s0 = World
          { level = parseLevel stringLevel
-         , rules = []
+         , rules = Set.empty
          }
   case evalState (runExceptT $ unMyTest myTest) s0 of
     Left errorLines -> do
@@ -28,21 +30,44 @@ runTest stringLevel myTest = do
     Right () -> do
       pure ()
 
-check :: [String] -> MyTest ()
-check stringLevel = MyTest $ do
+pprintRow :: [[Entity]] -> [String]
+pprintRow row
+  | all null row
+    = []
+  | otherwise
+    = map (pprintEntity . listToMaybe) row
+    : pprintRow (fmap (drop 1) row)
+
+pprintLevel :: Level -> [[String]]
+pprintLevel lvl
+  = reverse
+  [ reverse
+  $ pprintRow [ spritesAt lvl (x,y)
+              | x <- [x0..xZ]
+              ]
+  | y <- [y0..yZ]
+  ]
+  where
+    ((x0,y0), (xZ,yZ)) = levelBounds lvl
+
+check :: [[String]] -> MyTest ()
+check expected = MyTest $ do
   lvl <- lift (gets level)
-  unless ( levelArray lvl
-        == levelArray (parseLevel stringLevel)
-         ) $ do
-    throwE $ ["unexpected level state:"]
-          ++ (fmap ("  " ++) stringLevel)
+  let actual = pprintLevel lvl
+  unless ( actual == expected) $ do
+    throwE $ ["expected:"]
+          ++ (fmap ("  " ++) (concat expected))
+          ++ ["got:"]
+          ++ (fmap ("  " ++) (concat actual))
 
 passingTest :: IO ()
 passingTest
-  = runTest [ "X"
+  = runTest [ " X "
+            , "GgG"
             ] $ do
-      check [ "X"
-            ]
+      check [[ " X "
+             , "GgG"]
+             ]
 
 
 --myTest :: MyTest ()

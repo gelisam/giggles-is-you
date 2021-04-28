@@ -7,6 +7,7 @@ import Control.Monad.Trans.Except
 import Graphics.Gloss hiding (Text)
 import Graphics.Gloss.Interface.IO.Interact hiding (Text)
 import Graphics.Gloss.Juicy
+import qualified Data.Set as Set
 
 import Assets
 import CharChart
@@ -88,10 +89,11 @@ main' = do
                 ""
                 (World
                   level1
-                  [ NameIsYou "B"
-                  , NameIsYou "Giggles"
-                  , NameIsStop "Text"
-                  ]))
+                  (Set.fromList
+                    [ NameIsYou "B"
+                    , NameIsYou "Giggles"
+                    , NameIsStop "Text"
+                    ])))
               (displayUI assets)
               reactUI
               (\_ ui -> ui)

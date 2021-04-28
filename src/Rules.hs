@@ -1,6 +1,9 @@
 {-# OPTIONS -Wno-name-shadowing #-}
 module Rules where
 
+import Data.Set (Set)
+import qualified Data.Set as Set
+
 import Dir
 import Level
 import Types
@@ -9,36 +12,26 @@ import Types
 data Rule
   = NameIsYou Name
   | NameIsStop Name
-  deriving (Eq, Show, Read)
+  deriving (Eq, Ord, Read, Show)
 
-isYou :: [Rule] -> Entity -> Bool
-isYou [] _
-  = False
-isYou (NameIsYou you : rules) e@(Object name)
-  = (you == name)
- || isYou rules e
-isYou (NameIsYou you : rules) e@(Text _)
-  = (you == "Text")
- || isYou rules e
-isYou (_ : rules) name
-  = isYou rules name
+hasNameIsRule
+  :: (Name -> Rule)
+  -> Set Rule -> Entity -> Bool
+hasNameIsRule nameIsRule rules (Object name)
+  = nameIsRule name `Set.member` rules
+hasNameIsRule nameIsRule rules (Text _)
+  = nameIsRule "Text" `Set.member` rules
 
-isStop :: [Rule] -> Entity -> Bool
-isStop [] _
-  = False
-isStop (NameIsStop you : rules) e@(Object name)
-  = (you == name)
- || isStop rules e
-isStop (NameIsStop you : rules) e@(Text _)
-  = (you == "Text")
- || isStop rules e
-isStop (_ : rules) name
-  = isStop rules name
+isYou :: Set Rule -> Entity -> Bool
+isYou = hasNameIsRule NameIsYou
+
+isStop :: Set Rule -> Entity -> Bool
+isStop = hasNameIsRule NameIsStop
 
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
 
-moveYou :: [Rule] -> Dir -> Level -> Level
+moveYou :: Set Rule -> Dir -> Level -> Level
 moveYou rules dir lvl = compose
     [ \lvl -> case moveChunk (reverse chunk) lvl of
                 Nothing -> lvl
@@ -51,10 +44,10 @@ moveYou rules dir lvl = compose
     levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
 
     hasYous :: CellPos -> Bool
-    hasYous p = any (isYou rules) (spriteAt lvl p)
+    hasYous p = any (isYou rules) (spritesAt lvl p)
 
     hasStops :: CellPos -> Bool
-    hasStops p = any (isStop rules) (spriteAt lvl p)
+    hasStops p = any (isStop rules) (spritesAt lvl p)
 
     rowChunks :: [CellPos] -> [[CellPos]]
     rowChunks = filter (not . null) . go []
