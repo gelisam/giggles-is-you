@@ -30,44 +30,24 @@ runTest stringLevel myTest = do
     Right () -> do
       pure ()
 
-pprintRow :: [[Entity]] -> [String]
-pprintRow row
-  | all null row
-    = []
-  | otherwise
-    = map (pprintEntity . listToMaybe) row
-    : pprintRow (fmap (drop 1) row)
-
-pprintLevel :: Level -> [[String]]
-pprintLevel lvl
-  = reverse
-  [ reverse
-  $ pprintRow [ spritesAt lvl (x,y)
-              | x <- [x0..xZ]
-              ]
-  | y <- [y0..yZ]
-  ]
-  where
-    ((x0,y0), (xZ,yZ)) = levelBounds lvl
-
-check :: [[String]] -> MyTest ()
+check :: [String] -> MyTest ()
 check expected = MyTest $ do
   lvl <- lift (gets level)
   let actual = pprintLevel lvl
-  unless ( actual == expected) $ do
+  unless (actual == expected) $ do
     throwE $ ["expected:"]
-          ++ (fmap ("  " ++) (concat expected))
+          ++ (fmap ("  " ++) expected)
           ++ ["got:"]
-          ++ (fmap ("  " ++) (concat actual))
+          ++ (fmap ("  " ++) actual)
 
 passingTest :: IO ()
 passingTest
-  = runTest [ " X "
-            , "GgG"
+  = runTest [ "  X "
+            , ".GgG"
             ] $ do
-      check [[ " X "
-             , "GgG"]
-             ]
+      check [ "  X "
+            , ".GgG"
+            ]
 
 
 --myTest :: MyTest ()

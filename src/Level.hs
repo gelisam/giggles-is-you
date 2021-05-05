@@ -62,20 +62,76 @@ pprintEntity (Just (isSpecialEntity -> Just c))
 pprintEntity (Just (Object [c]))
   = c
 pprintEntity (Just (Text [c]))
-  = c
+  = toLower c
 
+-- ground floor first in the input,
+-- ground floor first in the output.
+pprintRow :: [[Entity]] -> [String]
+pprintRow row
+  | all null row
+    = []
+  | otherwise
+    = map (pprintEntity . listToMaybe) row
+    : pprintRow (fmap (drop 1) row)
+
+-- biggest Y first, ground floor last.
+-- ground floor is prefixed with '.'
+pprintLevel :: Level -> [String]
+pprintLevel lvl
+  = reverse
+  $ concat
+  [ zipWith (:) ('.' : repeat ' ')
+  $ pprintRow [ spritesAt lvl (x,y)
+              | x <- [x0..xZ]
+              ]
+  | y <- [y0..yZ]
+  ]
+  where
+    ((x0,y0), (xZ,yZ)) = levelBounds lvl
+
+parseRow :: [String] -> ([[Entity]], [String])
+parseRow ((' ' : stringRow) : stringLevel)
+  = let (row, stringLevel') = parseRow stringLevel
+        entityRow = map parseEntity stringRow
+        snoc entityStack Nothing
+          = entityStack
+        snoc entityStack (Just entity)
+          = entityStack ++ [entity]
+        row' = zipWith snoc row entityRow
+    in (row', stringLevel')
+parseRow (('.' : stringRow) : stringLevel)
+  = (map (maybeToList . parseEntity) stringRow, stringLevel)
+parseRow stringLevel
+  = error $ "expected a row beginning with ' ' or '.', found "
+         ++ show stringLevel
+
+-- ground floor last in the input,
+-- ground floor first in the output.
+parseRows :: [String] -> [[[Entity]]]
+parseRows []
+  = []
+parseRows stringLevel
+  = let (row, stringLevel') = parseRow stringLevel
+    in row : parseRows stringLevel'
+
+-- biggest Y first, ground floor last.
+-- ground floor is prefixed with '.'
 parseLevel :: [String] -> Level
-parseLevel stringLevel = Level {..}
+parseLevel = convertLevel . parseRows
+
+-- biggest Y first.
+convertLevel :: [[[Entity]]] -> Level
+convertLevel rows = Level {..}
   where
     stringLevelCellSize :: CellSize
     stringLevelCellSize
-      = (length (head stringLevel), length stringLevel)
+      = (length (head rows), length rows)
 
     levelArray :: Array CellPos [Entity]
     levelArray = array ((0,0), stringLevelCellSize - 1)
-      [ ((x,y), maybeToList (parseEntity c))
-      | (y, row) <- zip [0..] (reverse stringLevel)
-      , (x, c) <- zip [0..] row
+      [ ((x,y), entityStack)
+      | (y, row) <- zip [0..] (reverse rows)
+      , (x, entityStack) <- zip [0..] row
       ]
 
     levelList :: [(Entity, CellPos)]
@@ -163,13 +219,13 @@ moveSpriteTo
   -> Level
   -> Maybe Level
 moveSpriteTo moveable src dst lvl@(Level {..}) = do
-  let entities = filter moveable (levelArray ! src)
+  let entityStack = filter moveable (levelArray ! src)
   guard (dst `inBounds` lvl)
   pure $ Level
     { levelArray = levelArray ///
                  [ (src, filter (not . moveable))
-                 , (dst, (++ entities))
+                 , (dst, (++ entityStack))
                  ]
-    , levelList  = map (, dst) entities
+    , levelList  = map (, dst) entityStack
                 ++ filter (not . moveable . fst) levelList
     }
