@@ -61,9 +61,9 @@ walkOntoObstacleMidLevel
   = runTest [ "   Y  "
             , ".WXSZ "
             ] $ do
-      for_ ["W", "X", "Y", "Z"] $ \name -> do
-        enable $ NameIsYou name
-      enable $ NameIsStop "Sheets"
+      for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
+        enable $ NameIsYou (CharName name)
+      enable $ NameIsStop SheetsName
       move E
       check [ "  W   "
             , ". XSYZ"
@@ -74,50 +74,14 @@ walkOntoObstacleAtWorldsEnd
   = runTest [ "   Y "
             , ".WXSZ"
             ] $ do
-      for_ ["W", "X", "Y", "Z"] $ \name -> do
-        enable $ NameIsYou name
-      enable $ NameIsStop "Sheets"
+      for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
+        enable $ NameIsYou (CharName name)
+      enable $ NameIsStop SheetsName
       move E
       check [ "  W Y"
             , ". XSZ"
             ]
 
-failingTest :: IO ()
-failingTest
-  = runTest [ "     "
-            , ".GGG "
-            ] $ do
-      enable $ NameIsYou "Giggles"
-      move W
-      check [ " G   "
-            , ".GG  "
-            ]
-
-
---myTest :: MyTest ()
---myTest
---  = runTest [ "    "
---            , "XYZS"
---            ] $ do
---      for_ ["X", "Y", "Z"] $ \name -> do
---        addRule $ NameIsYou name
---      move E
---      withLocalRules $ do
---        addRule $ NameIsYou "Y"
---        move N
---        check [ "  Y "
---              , " XZS"
---              ]
---        move S
-
-
---
---
---     Y
--- W X S Z
---
---   W
---   X S Y Z
 main :: IO ()
 main = do
   walkOntoObstacleMidLevel

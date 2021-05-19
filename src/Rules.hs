@@ -20,7 +20,7 @@ hasNameIsRule
 hasNameIsRule nameIsRule rules (Object name)
   = nameIsRule name `Set.member` rules
 hasNameIsRule nameIsRule rules (Text _)
-  = nameIsRule "Text" `Set.member` rules
+  = nameIsRule TextName `Set.member` rules
 
 isYou :: Set Rule -> Entity -> Bool
 isYou = hasNameIsRule NameIsYou

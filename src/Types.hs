@@ -7,7 +7,12 @@ import Control.Monad.Trans.Except
 
 type M = ExceptT String IO
 
-type Name = String
+data Name
+  = GigglesName
+  | SheetsName
+  | TextName
+  | CharName Char
+  deriving (Eq, Ord, Read, Show)
 
 type PixelPos = (Float, Float)
 type PixelVector = (Float, Float)

@@ -14,15 +14,24 @@ import World
 
 
 drawSprite :: Assets -> Entity -> Picture
-drawSprite (Assets {..}) (Object "Sheets")
+drawSprite (Assets {..}) (Object SheetsName)
   = boxed (128, 128) cellPixelSize sheets
-drawSprite (Assets {..}) (Object "Giggles")
+drawSprite (Assets {..}) (Object GigglesName)
   = boxed (128, 127) cellPixelSize giggles
-drawSprite (Assets {..}) (Object name)
+drawSprite (Assets {..}) (Object TextName)
   = color green (circleSolid ((cellPixelSize - 8) / 2))
- <> boxedText charChart name ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
-drawSprite (Assets {..}) (Text word)
-  = boxedText charChart word (cellPixelSize - 8)
+ <> boxedText charChart "Text" ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
+drawSprite (Assets {..}) (Object (CharName c))
+  = color green (circleSolid ((cellPixelSize - 8) / 2))
+ <> boxedText charChart [c] ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
+drawSprite (Assets {..}) (Text GigglesName)
+  = boxedText charChart "Giggles" (cellPixelSize - 8)
+drawSprite (Assets {..}) (Text SheetsName)
+  = boxedText charChart "Sheets" (cellPixelSize - 8)
+drawSprite (Assets {..}) (Text TextName)
+  = boxedText charChart "Text" (cellPixelSize - 8)
+drawSprite (Assets {..}) (Text (CharName c))
+  = boxedText charChart [c] (cellPixelSize - 8)
 
 drawLevel :: Assets -> Level -> Picture
 drawLevel assets lvl@(Level {..})

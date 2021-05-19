@@ -90,9 +90,9 @@ main' = do
                 (World
                   level1
                   (Set.fromList
-                    [ NameIsYou "B"
-                    , NameIsYou "Giggles"
-                    , NameIsStop "Text"
+                    [ NameIsYou (CharName 'B')
+                    , NameIsYou GigglesName
+                    , NameIsStop TextName
                     ])))
               (displayUI assets)
               reactUI

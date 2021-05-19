@@ -15,7 +15,7 @@ import Types
 data Entity
   = Object Name
   | Text Name
-  deriving (Show, Eq)
+  deriving (Eq, Show)
 
 data Level = Level
   { levelArray :: Array CellPos [Entity]  -- bottom to top
@@ -24,11 +24,11 @@ data Level = Level
 
 specialChars :: [(Char, Entity)]
 specialChars
-  = [ ('G', Object "Giggles")
-    , ('g', Text   "Giggles")
-    , ('S', Object "Sheets")
-    , ('s', Text   "Sheets")
-    , ('t', Text   "Text")
+  = [ ('G', Object GigglesName)
+    , ('g', Text   GigglesName)
+    , ('S', Object SheetsName)
+    , ('s', Text   SheetsName)
+    , ('t', Text   TextName)
     ]
 
 specialEntities :: [(Entity, Char)]
@@ -50,19 +50,22 @@ parseEntity (isSpecialChar -> Just entity)
   = Just entity
 parseEntity c
   | isUpper c
-    = Just (Object [c])
+    = Just (Object (CharName c))
   | otherwise
-    = Just (Text [toUpper c])
+    = Just (Text (CharName (toUpper c)))
 
 pprintEntity :: Maybe Entity -> Char
 pprintEntity Nothing
   = ' '
 pprintEntity (Just (isSpecialEntity -> Just c))
   = c
-pprintEntity (Just (Object [c]))
+pprintEntity (Just (Object (CharName c)))
   = c
-pprintEntity (Just (Text [c]))
+pprintEntity (Just (Text (CharName c)))
   = toLower c
+pprintEntity x
+  = error $ "pprintEntity: pattern-match non-exhaustive: "
+         ++ show x
 
 -- ground floor first in the input,
 -- ground floor first in the output.
