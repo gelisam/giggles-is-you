@@ -1,12 +1,12 @@
-module CharChart where
+module GigglesIsYou.CharChart where
 
 import Data.Char
 import Data.Traversable
 import Graphics.Gloss
 import qualified Graphics.UI.GLUT.Fonts as GLUT
 
-import Pictures
-import Types
+import GigglesIsYou.Pictures
+import GigglesIsYou.Types
 
 
 type CharChart = [(Char, PixelSize)]

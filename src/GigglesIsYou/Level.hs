@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections, ViewPatterns #-}
-module Level where
+module GigglesIsYou.Level where
 
 import Control.Monad
 import Data.Char
@@ -8,8 +8,8 @@ import Data.Maybe
 import Data.Tuple
 import GHC.Arr
 
-import Dir
-import Types
+import GigglesIsYou.Dir
+import GigglesIsYou.Types
 
 
 data Entity

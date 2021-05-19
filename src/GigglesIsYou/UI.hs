@@ -1,7 +1,7 @@
-module UI where
+module GigglesIsYou.UI where
 
-import Types
-import World
+import GigglesIsYou.Types
+import GigglesIsYou.World
 
 
 data UI = UI

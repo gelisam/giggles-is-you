@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards #-}
-module World where
+module GigglesIsYou.World where
 
 import Text.Read (readMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import Level
-import Rules
+import GigglesIsYou.Level
+import GigglesIsYou.Rules
 
 
 data World = World

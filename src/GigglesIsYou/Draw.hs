@@ -1,16 +1,16 @@
 {-# LANGUAGE RecordWildCards, ViewPatterns #-}
-module Draw where
+module GigglesIsYou.Draw where
 
 import GHC.Arr
 import Graphics.Gloss hiding (Text)
 
-import Assets
-import CharChart
-import Level
-import Pictures
-import Types
-import UI
-import World
+import GigglesIsYou.Assets
+import GigglesIsYou.CharChart
+import GigglesIsYou.Level
+import GigglesIsYou.Pictures
+import GigglesIsYou.Types
+import GigglesIsYou.UI
+import GigglesIsYou.World
 
 
 drawSprite :: Assets -> Entity -> Picture

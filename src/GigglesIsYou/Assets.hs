@@ -1,9 +1,9 @@
-module Assets where
+module GigglesIsYou.Assets where
 
 import Graphics.Gloss
 
-import CharChart
-import Level
+import GigglesIsYou.CharChart
+import GigglesIsYou.Level
 
 
 data Assets = Assets

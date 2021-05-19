@@ -1,8 +1,8 @@
-module Pictures where
+module GigglesIsYou.Pictures where
 
 import Graphics.Gloss
 
-import Types
+import GigglesIsYou.Types
 
 
 translate2D :: (Float, Float) -> Picture -> Picture

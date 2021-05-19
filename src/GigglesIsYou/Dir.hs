@@ -1,4 +1,4 @@
-module Dir where
+module GigglesIsYou.Dir where
 
 import Graphics.Gloss.Interface.IO.Interact
 

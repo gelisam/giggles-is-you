@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS -Wno-orphans #-}
-module Types where
+module GigglesIsYou.Types where
 
 import Control.Monad.Trans.Except
 

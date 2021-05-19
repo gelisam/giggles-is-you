@@ -16,6 +16,7 @@ dependencies:
   - containers
   - gloss
   - gloss-juicy
+  - mtl
   - transformers
 
 library:
@@ -37,4 +38,3 @@ tests:
       - test
     dependencies:
       - giggles-is-you
-      - mtl

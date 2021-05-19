@@ -1,12 +1,12 @@
 {-# OPTIONS -Wno-name-shadowing #-}
-module Rules where
+module GigglesIsYou.Rules where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import Dir
-import Level
-import Types
+import GigglesIsYou.Dir
+import GigglesIsYou.Level
+import GigglesIsYou.Types
 
 
 data Rule
