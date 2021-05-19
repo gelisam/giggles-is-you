@@ -156,6 +156,8 @@ inBounds p lvl = inRange (levelBounds lvl) p
 levelCellSize :: Level -> CellSize
 levelCellSize lvl = snd (levelBounds lvl) + 1
 
+-- Includes one extra position outside the bounds of the level
+--
 -- >>> levelRows lvl
 -- [(0,2), (1,2), (2,2), (3,2)]
 -- [(0,1), (1,1), (2,1), (3,1)]
@@ -163,13 +165,15 @@ levelCellSize lvl = snd (levelBounds lvl) + 1
 levelRows :: Level -> [[CellPos]]
 levelRows lvl
   = [ [ (x, y)
-      | x <- [loX..hiX]
+      | x <- [loX..hiX+1]
       ]
     | y <- [hiY, (hiY-1) .. loY]
     ]
   where
     ((loX, loY), (hiX, hiY)) = levelBounds lvl
 
+-- Includes one extra position outside the bounds of the level
+--
 -- >>> levelCols lvl
 -- [(0,2), (0,1), (0,0)]
 -- [(1,2), (1,1), (1,0)]
@@ -178,6 +182,9 @@ levelRows lvl
 levelCols :: Level -> [[CellPos]]
 levelCols = transpose . levelRows
 
+-- Includes one extra position outside the bounds of the level
+-- for each row
+--
 -- >>> directedLevelIndices N lvl
 -- [(0,0), (0,1), (0,2)]
 -- [(1,0), (1,1), (1,2)]

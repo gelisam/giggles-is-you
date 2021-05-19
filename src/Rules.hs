@@ -40,15 +40,21 @@ moveYou rules dir lvl = compose
     ]
     lvl
   where
+    -- all the chunks which are moving throughout the level
     levelChunks :: [[CellPos]]
     levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
 
     hasYous :: CellPos -> Bool
-    hasYous p = any (isYou rules) (spritesAt lvl p)
+    hasYous p
+      = inBounds p lvl
+     && any (isYou rules) (spritesAt lvl p)
 
     hasStops :: CellPos -> Bool
-    hasStops p = any (isStop rules) (spritesAt lvl p)
+    hasStops p
+      = not (inBounds p lvl)
+     || any (isStop rules) (spritesAt lvl p)
 
+    -- the chunks which are moving within the row
     rowChunks :: [CellPos] -> [[CellPos]]
     rowChunks = filter (not . null) . go []
       where
