@@ -165,9 +165,9 @@ levelCellSize lvl = snd (levelBounds lvl) + 1
 levelRows :: Level -> [[CellPos]]
 levelRows lvl
   = [ [ (x, y)
-      | x <- [loX..hiX+1]
+      | x <- [loX-1..hiX+1]
       ]
-    | y <- [hiY, (hiY-1) .. loY]
+    | y <- [hiY+1, hiY .. loY-1]
     ]
   where
     ((loX, loY), (hiX, hiY)) = levelBounds lvl
