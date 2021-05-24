@@ -83,7 +83,20 @@ walkOntoObstacleAtWorldsEnd
             , ". XSZ"
             ]
 
+walkOntoObstacleWhileStop :: IO ()
+walkOntoObstacleWhileStop
+  = runTest [ "        G "
+            , ".G GGS GS "
+            ] $ do
+      enable $ NameIsYou GigglesName
+      enable $ NameIsStop GigglesName
+      enable $ NameIsStop SheetsName
+      move E
+      check [ ". GGGS GSG"
+            ]
+
 testAll :: IO ()
 testAll = do
   walkOntoObstacleMidLevel
   walkOntoObstacleAtWorldsEnd
+  walkOntoObstacleWhileStop
