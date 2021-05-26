@@ -95,8 +95,46 @@ walkOntoObstacleWhileStop
       check [ ". GGGS GSG"
             ]
 
+walkOntoObstacleWhileSomeAreStop :: IO ()
+walkOntoObstacleWhileSomeAreStop
+  = runTest [ ".ABS BAS"
+            ] $ do
+      enable $ NameIsYou (CharName 'A')
+      enable $ NameIsYou (CharName 'B')
+      enable $ NameIsStop (CharName 'B')
+      enable $ NameIsStop SheetsName
+      move E
+      check [ ".     B "
+            , ".ABS  AS"
+            ]
+
+youAndStopMoveInUnison :: IO ()
+youAndStopMoveInUnison
+  = runTest [ "     "
+            , ".GGG "
+            ] $ do
+      enable $ NameIsYou GigglesName
+      enable $ NameIsStop GigglesName
+      move E
+      check [ ". GGG"
+            ]
+
+youAndStopStopInUnison :: IO ()
+youAndStopStopInUnison
+  = runTest [ "     "
+            , ".GGGS"
+            ] $ do
+      enable $ NameIsYou GigglesName
+      enable $ NameIsStop GigglesName
+      enable $ NameIsStop SheetsName
+      move E
+      check [ ". GGG"
+            ]
+
 testAll :: IO ()
 testAll = do
   walkOntoObstacleMidLevel
   walkOntoObstacleAtWorldsEnd
   walkOntoObstacleWhileStop
+  youAndStopMoveInUnison
+  youAndStopStopInUnison
