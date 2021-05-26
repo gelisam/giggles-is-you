@@ -81,7 +81,7 @@ main' = do
   charChart <- lift loadCharChart
   let assets = Assets {..}
 
-  lift $ play (InWindow "Giggles is you" (400, 300) (-10, 10))
+  lift $ play (InWindow "Giggles is you" (400, 300) (50, 100))
               white
               30
               (UI
