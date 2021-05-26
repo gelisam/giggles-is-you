@@ -13,25 +13,32 @@ import GigglesIsYou.UI
 import GigglesIsYou.World
 
 
+drawGenericText :: CharChart -> String -> Picture
+drawGenericText charChart s
+  = boxedText charChart s (cellPixelSize - 8)
+
+drawGenericObject :: CharChart -> String -> Picture
+drawGenericObject charChart s
+  = color green (circleSolid ((cellPixelSize - 8) / 2))
+ <> boxedText charChart s ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
+
 drawSprite :: Assets -> Entity -> Picture
 drawSprite (Assets {..}) (Object SheetsName)
   = boxed (128, 128) cellPixelSize sheets
 drawSprite (Assets {..}) (Object GigglesName)
   = boxed (128, 127) cellPixelSize giggles
 drawSprite (Assets {..}) (Object TextName)
-  = color green (circleSolid ((cellPixelSize - 8) / 2))
- <> boxedText charChart "Text" ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
+  = drawGenericObject charChart "Text"
 drawSprite (Assets {..}) (Object (CharName c))
-  = color green (circleSolid ((cellPixelSize - 8) / 2))
- <> boxedText charChart [c] ((cellPixelSize - 8) / realToFrac (sqrt 2 :: Float))
+  = drawGenericObject charChart [c]
 drawSprite (Assets {..}) (Text GigglesName)
-  = boxedText charChart "Giggles" (cellPixelSize - 8)
+  = drawGenericText charChart "Giggles"
 drawSprite (Assets {..}) (Text SheetsName)
-  = boxedText charChart "Sheets" (cellPixelSize - 8)
+  = drawGenericText charChart "Sheets"
 drawSprite (Assets {..}) (Text TextName)
-  = boxedText charChart "Text" (cellPixelSize - 8)
+  = drawGenericText charChart "Text"
 drawSprite (Assets {..}) (Text (CharName c))
-  = boxedText charChart [c] (cellPixelSize - 8)
+  = drawGenericText charChart [c]
 
 drawLevel :: Assets -> Level -> Picture
 drawLevel assets lvl@(Level {..})
