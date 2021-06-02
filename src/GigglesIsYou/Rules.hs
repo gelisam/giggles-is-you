@@ -63,18 +63,15 @@ moveYou rules dir lvl = compose
 
     hasNonYouStops :: CellPos -> Bool
     hasNonYouStops p
-      = not (inBounds p lvl)
-     || any isNonYouStop (spritesAt lvl p)
+      = any isNonYouStop (spritesAt lvl p)
 
     hasStops :: CellPos -> Bool
     hasStops p
-      = not (inBounds p lvl)
-     || any (isStop rules) (spritesAt lvl p)
+      = any (isStop rules) (spritesAt lvl p)
 
     hasYou :: CellPos -> Bool
     hasYou p
-      = inBounds p lvl
-     && any (isYou rules) (spritesAt lvl p)
+      = any (isYou rules) (spritesAt lvl p)
 
     -- the active entities within the row
     rowActiveEntities :: [CellPos] -> [ActiveEntity]
