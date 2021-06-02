@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS -Wno-name-shadowing #-}
 module GigglesIsYou.Rules where
 
@@ -34,22 +35,25 @@ compose = foldr (.) id
 -- an active cell, that is, a cell containing some entities
 -- (those which are "you") which move in the direction the player
 -- pressed.
-type ActiveCell = CellPos
+data ActiveEntity = ActiveEntity
+  { activeCellPos :: CellPos
+  , isActive :: Entity -> Bool
+  }
 
 moveYou :: Set Rule -> Dir -> Level -> Level
 moveYou rules dir lvl = compose
-    [ \lvl -> case moveActiveCell activeCell lvl of
+    [ \lvl -> case moveActiveEntity activeEntity lvl of
                 Nothing -> lvl
                 Just lvl' -> lvl'
-    | activeCell <- reverse levelActiveCells
+    | activeEntity <- reverse levelActiveEntities
     ]
     lvl
   where
-    -- all the active cells within the level
-    levelActiveCells :: [ActiveCell]
-    levelActiveCells
+    -- all the active entities within the level
+    levelActiveEntities :: [ActiveEntity]
+    levelActiveEntities
       = foldMap
-          rowActiveCells
+          rowActiveEntities
           (directedLevelIndices (flipDir dir) lvl)
 
     isNonYouStop :: Entity -> Bool
@@ -72,26 +76,27 @@ moveYou rules dir lvl = compose
       = inBounds p lvl
      && any (isYou rules) (spritesAt lvl p)
 
-    -- the active cells within the row
-    rowActiveCells :: [CellPos] -> [ActiveCell]
-    rowActiveCells = go True
+    -- the active entities within the row
+    rowActiveEntities :: [CellPos] -> [ActiveEntity]
+    rowActiveEntities = go True
       where
         -- the Bool indicates whether movement is blocked in the
         -- direction 'dir'
-        go :: Bool -> [CellPos] -> [ActiveCell]
+        go :: Bool -> [CellPos] -> [ActiveEntity]
         go _ []
           = []
         go True (p:ps)
           = go (hasStops p) ps
         go False (p:ps)
           | hasYou p
-            = p : go (hasNonYouStops p) ps
+            = ActiveEntity p (isYou rules)
+            : go (hasNonYouStops p) ps
           | otherwise
             = go (hasStops p) ps
 
-    moveActiveCell :: ActiveCell -> Level -> Maybe Level
-    moveActiveCell p
+    moveActiveEntity :: ActiveEntity -> Level -> Maybe Level
+    moveActiveEntity (ActiveEntity {..})
       = moveSpriteTo
-          (isYou rules)
-          p
-          (p + unitVector dir)
+          isActive
+          activeCellPos
+          (activeCellPos + unitVector dir)
