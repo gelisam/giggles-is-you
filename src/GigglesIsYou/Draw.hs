@@ -56,7 +56,7 @@ totalPixelSize :: Level -> PixelSize
 totalPixelSize lvl = cellPixelSize * fromIntegral2D (levelCellSize lvl)
 
 displayWorld :: Assets -> World -> Picture
-displayWorld assets@(Assets {..}) (World {..})
+displayWorld assets (World {..})
   = drawLevel assets level
 
 displayUI :: Assets -> UI -> Picture
