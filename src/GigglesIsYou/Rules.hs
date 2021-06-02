@@ -11,8 +11,9 @@ import GigglesIsYou.Types
 
 
 data Rule
-  = NameIsYou Name
+  = NameIsPush Name
   | NameIsStop Name
+  | NameIsYou Name
   deriving (Eq, Ord, Read, Show)
 
 hasNameIsRule
@@ -23,11 +24,14 @@ hasNameIsRule nameIsRule rules (Object name)
 hasNameIsRule nameIsRule rules (Text _)
   = nameIsRule TextName `Set.member` rules
 
-isYou :: Set Rule -> Entity -> Bool
-isYou = hasNameIsRule NameIsYou
+isPush :: Set Rule -> Entity -> Bool
+isPush = hasNameIsRule NameIsPush
 
 isStop :: Set Rule -> Entity -> Bool
 isStop = hasNameIsRule NameIsStop
+
+isYou :: Set Rule -> Entity -> Bool
+isYou = hasNameIsRule NameIsYou
 
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
