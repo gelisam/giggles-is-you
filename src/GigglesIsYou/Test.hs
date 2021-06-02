@@ -121,14 +121,13 @@ youAndStopMoveInUnison
 
 youAndStopStopInUnison :: IO ()
 youAndStopStopInUnison
-  = runTest [ "     "
-            , ".GGGS"
+  = runTest [ ".GGGS"
             ] $ do
       enable $ NameIsYou GigglesName
       enable $ NameIsStop GigglesName
       enable $ NameIsStop SheetsName
       move E
-      check [ ". GGG"
+      check [ ".GGGS"
             ]
 
 testAll :: IO ()

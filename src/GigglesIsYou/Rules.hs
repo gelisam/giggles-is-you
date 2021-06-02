@@ -31,54 +31,67 @@ isStop = hasNameIsRule NameIsStop
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
 
+-- an active cell, that is, a cell containing some entities
+-- (those which are "you") which move in the direction the player
+-- pressed.
+type ActiveCell = CellPos
+
 moveYou :: Set Rule -> Dir -> Level -> Level
 moveYou rules dir lvl = compose
-    [ \lvl -> case moveChunk (reverse chunk) lvl of
+    [ \lvl -> case moveActiveCell activeCell lvl of
                 Nothing -> lvl
                 Just lvl' -> lvl'
-    | chunk <- levelChunks
+    | activeCell <- reverse levelActiveCells
     ]
     lvl
   where
-    -- all the chunks which are moving throughout the level
-    levelChunks :: [[CellPos]]
-    levelChunks = foldMap rowChunks (directedLevelIndices dir lvl)
+    -- all the active cells within the level
+    levelActiveCells :: [ActiveCell]
+    levelActiveCells
+      = foldMap
+          rowActiveCells
+          (directedLevelIndices (flipDir dir) lvl)
 
-    hasYous :: CellPos -> Bool
-    hasYous p
-      = inBounds p lvl
-     && any (isYou rules) (spritesAt lvl p)
+    isNonYouStop :: Entity -> Bool
+    isNonYouStop e
+      = isStop rules e
+     && not (isYou rules e)
+
+    hasNonYouStops :: CellPos -> Bool
+    hasNonYouStops p
+      = not (inBounds p lvl)
+     || any isNonYouStop (spritesAt lvl p)
 
     hasStops :: CellPos -> Bool
     hasStops p
       = not (inBounds p lvl)
      || any (isStop rules) (spritesAt lvl p)
 
-    -- the chunks which are moving within the row
-    rowChunks :: [CellPos] -> [[CellPos]]
-    rowChunks = filter (not . null) . go []
+    hasYou :: CellPos -> Bool
+    hasYou p
+      = inBounds p lvl
+     && any (isYou rules) (spritesAt lvl p)
+
+    -- the active cells within the row
+    rowActiveCells :: [CellPos] -> [ActiveCell]
+    rowActiveCells = go True
       where
-        go :: [CellPos] -> [CellPos] -> [[CellPos]]
-        go reversedChunk []
-          = [reverse reversedChunk]
-        go reversedChunk (p:ps)
-          | hasYous p && hasStops p
-            = reverse (drop 1 reversedChunk) : go [p] ps
-          | hasYous p
-            = go (p:reversedChunk) ps
-          | hasStops p
-            = reverse (drop 1 reversedChunk) : go [] ps
+        -- the Bool indicates whether movement is blocked in the
+        -- direction 'dir'
+        go :: Bool -> [CellPos] -> [ActiveCell]
+        go _ []
+          = []
+        go True (p:ps)
+          = go (hasStops p) ps
+        go False (p:ps)
+          | hasYou p
+            = p : go (hasNonYouStops p) ps
           | otherwise
-            = reverse reversedChunk : go [] ps
+            = go (hasStops p) ps
 
-    moveChunk :: [CellPos] -> Level -> Maybe Level
-    moveChunk [] lvl = do
-      pure lvl
-    moveChunk (p:chunk) lvl = do
-      lvl' <- moveSpriteTo
-                (isYou rules)
-                p
-                (p + unitVector dir)
-                lvl
-      moveChunk chunk lvl'
-
+    moveActiveCell :: ActiveCell -> Level -> Maybe Level
+    moveActiveCell p
+      = moveSpriteTo
+          (isYou rules)
+          p
+          (p + unitVector dir)
