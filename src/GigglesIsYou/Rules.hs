@@ -36,28 +36,27 @@ isYou = hasNameIsRule NameIsYou
 compose :: [a -> a] -> a -> a
 compose = foldr (.) id
 
--- an active cell, that is, a cell containing some entities
--- (those which are "you") which move in the direction the player
--- pressed.
-data ActiveEntity = ActiveEntity
+-- an active cell, that is, a cell containing some entities which move in the
+-- direction the player pressed.
+data ActiveCell = ActiveCell
   { activeCellPos :: CellPos
   , isActive :: Entity -> Bool
   }
 
 moveYou :: Set Rule -> Dir -> Level -> Level
 moveYou rules dir lvl = compose
-    [ \lvl -> case moveActiveEntity activeEntity lvl of
+    [ \lvl -> case moveActiveCell activeCell lvl of
                 Nothing -> lvl
                 Just lvl' -> lvl'
-    | activeEntity <- reverse levelActiveEntities
+    | activeCell <- reverse levelActiveCells
     ]
     lvl
   where
-    -- all the active entities within the level
-    levelActiveEntities :: [ActiveEntity]
-    levelActiveEntities
+    -- all the active cells within the level
+    levelActiveCells :: [ActiveCell]
+    levelActiveCells
       = foldMap
-          rowActiveEntities
+          rowActiveCells
           (directedLevelIndices (flipDir dir) lvl)
 
     isNonYouStop :: Entity -> Bool
@@ -77,26 +76,26 @@ moveYou rules dir lvl = compose
     hasYous p
       = any (isYou rules) (spritesAt lvl p)
 
-    -- the active entities within the row
-    rowActiveEntities :: [CellPos] -> [ActiveEntity]
-    rowActiveEntities = go True
+    -- the active cells within the row
+    rowActiveCells :: [CellPos] -> [ActiveCell]
+    rowActiveCells = go True
       where
         -- the Bool indicates whether movement is blocked in the
         -- direction 'dir'
-        go :: Bool -> [CellPos] -> [ActiveEntity]
+        go :: Bool -> [CellPos] -> [ActiveCell]
         go _ []
           = []
         go True (p:ps)
           = go (hasStops p) ps
         go False (p:ps)
           | hasYous p
-            = ActiveEntity p (isYou rules)
+            = ActiveCell p (isYou rules)
             : go (hasNonYouStops p) ps
           | otherwise
             = go (hasStops p) ps
 
-    moveActiveEntity :: ActiveEntity -> Level -> Maybe Level
-    moveActiveEntity (ActiveEntity {..})
+    moveActiveCell :: ActiveCell -> Level -> Maybe Level
+    moveActiveCell (ActiveCell {..})
       = moveSpriteTo
           isActive
           activeCellPos
