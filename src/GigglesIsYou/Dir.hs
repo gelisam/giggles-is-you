@@ -22,5 +22,5 @@ unitVector S = (0,-1)
 flipDir :: Dir -> Dir
 flipDir N = S
 flipDir E = W
-flipDir W = W
+flipDir W = E
 flipDir S = N
