@@ -1,12 +1,12 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections, ViewPatterns #-}
 module GigglesIsYou.Level where
 
-import Control.Monad
 import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Tuple
 import GHC.Arr
+import qualified Data.Map as Map
 
 import GigglesIsYou.Dir
 import GigglesIsYou.Types
@@ -208,30 +208,65 @@ directedLevelIndices E = levelRows
 directedLevelIndices W = fmap reverse . levelRows
 directedLevelIndices S = levelCols
 
-(///) :: forall i e. Ix i
+(///) :: forall i e. (Ix i, Ord i)
       => Array i e -> [(i, e -> e)] -> Array i e
 es /// ifs = es // ies
   where
+    ifs' :: [(i, e -> e)]
+    ifs' = Map.toList
+         . Map.fromListWith (.)
+         $ ifs
+
     ies :: [(i, e)]
-    ies = fmap if2ie ifs
+    ies = fmap if2ie ifs'
 
     if2ie :: (i, e -> e) -> (i, e)
     if2ie (i, f) = (i, f (es ! i))
 
-moveSpriteTo
-  :: (Entity -> Bool)
-  -> CellPos
-  -> CellPos
+moveSpritesTo
+  :: [(CellPos, Entity -> Bool, CellPos)]
   -> Level
-  -> Maybe Level
-moveSpriteTo moveable src dst lvl@(Level {..}) = do
-  let entityStack = filter moveable (levelArray ! src)
-  guard (dst `inBounds` lvl)
-  pure $ Level
-    { levelArray = levelArray ///
-                 [ (src, filter (not . moveable))
-                 , (dst, (++ entityStack))
-                 ]
-    , levelList  = map (, dst) entityStack
-                ++ filter (not . moveable . fst) levelList
-    }
+  -> Level
+moveSpritesTo moves (Level {..}) =
+  let removed :: [(CellPos, [Entity] -> [Entity])]
+      removed
+        = [ (src, filter (not . isMoving))
+          | (src, isMoving, _dst) <- moves
+          ]
+
+      added :: [(CellPos, [Entity])]
+      added
+        = [ (dst, entityStack)
+          | (src, isMoving, dst) <- moves
+          , let entityStack = filter isMoving (levelArray ! src)
+          ]
+
+      assocs_ :: [(CellPos, [Entity] -> [Entity])]
+      assocs_
+        = removed
+       ++ [ (p, (++ es))
+          | (p, es) <- added
+          ]
+
+      isListEntryMoving :: (Entity, CellPos) -> Bool
+      isListEntryMoving (e, p)
+        = any isThisListEntryMoving moves
+        where
+          isThisListEntryMoving
+            :: (CellPos, Entity -> Bool, CellPos)
+            -> Bool
+          isThisListEntryMoving (src, isMoving, _dst)
+            = src == p
+           && isMoving e
+
+      levelList' :: [(Entity, CellPos)]
+      levelList'
+        = [ (e, p)
+          | (p, es) <- added
+          , e <- es
+          ]
+       ++ filter (not . isListEntryMoving) levelList
+  in Level
+       { levelArray = levelArray /// assocs_
+       , levelList  = levelList'
+       }

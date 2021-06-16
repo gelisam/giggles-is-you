@@ -33,9 +33,6 @@ isStop = hasNameIsRule NameIsStop
 isYou :: Set Rule -> Entity -> Bool
 isYou = hasNameIsRule NameIsYou
 
-compose :: [a -> a] -> a -> a
-compose = foldr (.) id
-
 -- an active cell, that is, a cell containing some entities which move in the
 -- direction the player pressed.
 data ActiveCell = ActiveCell
@@ -44,13 +41,15 @@ data ActiveCell = ActiveCell
   }
 
 moveYou :: Set Rule -> Dir -> Level -> Level
-moveYou rules dir lvl = compose
-    [ \lvl -> case moveActiveCell activeCell lvl of
-                Nothing -> lvl
-                Just lvl' -> lvl'
-    | activeCell <- reverse levelActiveCells
-    ]
-    lvl
+moveYou rules dir lvl
+  = moveSpritesTo
+      [ ( activeCellPos
+        , isActive
+        , activeCellPos + unitVector dir
+        )
+      | ActiveCell {..} <- reverse levelActiveCells
+      ]
+      lvl
   where
     -- all the active cells within the level
     levelActiveCells :: [ActiveCell]
@@ -93,10 +92,3 @@ moveYou rules dir lvl = compose
             : go (hasNonYouStops p) ps
           | otherwise
             = go (hasStops p) ps
-
-    moveActiveCell :: ActiveCell -> Level -> Maybe Level
-    moveActiveCell (ActiveCell {..})
-      = moveSpriteTo
-          isActive
-          activeCellPos
-          (activeCellPos + unitVector dir)
