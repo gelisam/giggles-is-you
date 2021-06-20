@@ -104,7 +104,7 @@ walkOntoObstacleWhileSomeAreStop
       enable $ NameIsStop (CharName 'B')
       enable $ NameIsStop SheetsName
       move E
-      check [ ".     B "
+      check [ "      B "
             , ".ABS  AS"
             ]
 
@@ -130,10 +130,28 @@ youAndStopStopInUnison
       check [ ".GGGS"
             ]
 
+pushTest :: IO ()
+pushTest
+  = runTest [ "                      G  G  "
+            , ".GA  GAS GB  GBS GAA  B  BA "
+            ] $ do
+      enable $ NameIsYou GigglesName
+      enable $ NameIsPush (CharName 'A')
+      enable $ NameIsPush (CharName 'B')
+      enable $ NameIsStop (CharName 'B')
+      enable $ NameIsStop SheetsName
+      move E
+      check [ "      G                     "
+            , ". GA  AS  GB GBS  GAA BG BGA"
+            ]
+
 testAll :: IO ()
 testAll = do
   walkOntoObstacleMidLevel
   walkOntoObstacleAtWorldsEnd
   walkOntoObstacleWhileStop
+  walkOntoObstacleWhileSomeAreStop
   youAndStopMoveInUnison
   youAndStopStopInUnison
+  pushTest
+  putStrLn "PASSED"

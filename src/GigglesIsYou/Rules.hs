@@ -40,6 +40,8 @@ data ActiveCell = ActiveCell
   , isActive :: Entity -> Bool
   }
 
+type Chunk = [ActiveCell]
+
 moveYou :: Set Rule -> Dir -> Level -> Level
 moveYou rules dir lvl
   = moveSpritesTo
@@ -47,25 +49,39 @@ moveYou rules dir lvl
         , isActive
         , activeCellPos + unitVector dir
         )
-      | ActiveCell {..} <- reverse levelActiveCells
+      | chunk <- levelChunks
+      , ActiveCell {..} <- chunk
       ]
       lvl
   where
     -- all the active cells within the level
-    levelActiveCells :: [ActiveCell]
-    levelActiveCells
+    levelChunks :: [Chunk]
+    levelChunks
       = foldMap
-          rowActiveCells
+          rowChunks
           (directedLevelIndices (flipDir dir) lvl)
+
+    isNonPushStop :: Entity -> Bool
+    isNonPushStop e
+      = isStop rules e
+     && not (isPush rules e)
 
     isNonYouStop :: Entity -> Bool
     isNonYouStop e
       = isStop rules e
      && not (isYou rules e)
 
+    hasNonPushStops :: CellPos -> Bool
+    hasNonPushStops p
+      = any isNonPushStop (spritesAt lvl p)
+
     hasNonYouStops :: CellPos -> Bool
     hasNonYouStops p
       = any isNonYouStop (spritesAt lvl p)
+
+    hasPushes :: CellPos -> Bool
+    hasPushes p
+      = any (isPush rules) (spritesAt lvl p)
 
     hasStops :: CellPos -> Bool
     hasStops p
@@ -76,19 +92,34 @@ moveYou rules dir lvl
       = any (isYou rules) (spritesAt lvl p)
 
     -- the active cells within the row
-    rowActiveCells :: [CellPos] -> [ActiveCell]
-    rowActiveCells = go True
+    rowChunks :: [CellPos] -> [Chunk]
+    rowChunks = go Nothing
       where
-        -- the Bool indicates whether movement is blocked in the
-        -- direction 'dir'
-        go :: Bool -> [CellPos] -> [ActiveCell]
+        -- Nothing means the movement is blocked in the direction
+        -- in which the characters are moving
+        go :: Maybe Chunk -> [CellPos] -> [Chunk]
         go _ []
           = []
-        go True (p:ps)
-          = go (hasStops p) ps
-        go False (p:ps)
+        go Nothing (p:ps)
+          = go (if hasStops p then Nothing else Just []) ps
+        go (Just chunk) (p:ps)
           | hasYous p
-            = ActiveCell p (isYou rules)
-            : go (hasNonYouStops p) ps
+            = (ActiveCell p (isYou rules) : chunk)
+            : go (if hasNonYouStops p
+                  then Nothing
+                  else Just [currentActiveCell])
+                 ps
+          | hasPushes p
+            = go (if hasNonPushStops p
+                  then Nothing
+                  else Just (currentActiveCell : chunk))
+                 ps
           | otherwise
-            = go (hasStops p) ps
+            = go (if hasStops p
+                  then Nothing
+                  else Just [])
+                 ps
+          where
+            currentActiveCell :: ActiveCell
+            currentActiveCell
+              = ActiveCell p (isPush rules)
