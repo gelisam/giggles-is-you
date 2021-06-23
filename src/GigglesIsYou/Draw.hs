@@ -31,14 +31,22 @@ drawSprite (Assets {..}) (Object TextName)
   = drawGenericObject charChart "Text"
 drawSprite (Assets {..}) (Object (CharName c))
   = drawGenericObject charChart [c]
-drawSprite (Assets {..}) (Text GigglesName)
+drawSprite (Assets {..}) (Text (NameWord GigglesName))
   = drawGenericText charChart "Giggles"
-drawSprite (Assets {..}) (Text SheetsName)
+drawSprite (Assets {..}) (Text (NameWord SheetsName))
   = drawGenericText charChart "Sheets"
-drawSprite (Assets {..}) (Text TextName)
+drawSprite (Assets {..}) (Text (NameWord TextName))
   = drawGenericText charChart "Text"
-drawSprite (Assets {..}) (Text (CharName c))
+drawSprite (Assets {..}) (Text (NameWord (CharName c)))
   = drawGenericText charChart [c]
+drawSprite (Assets {..}) (Text IsWord)
+  = drawGenericText charChart "is"
+drawSprite (Assets {..}) (Text YouWord)
+  = drawGenericText charChart "You"
+drawSprite (Assets {..}) (Text StopWord)
+  = drawGenericText charChart "Stop"
+drawSprite (Assets {..}) (Text PushWord)
+  = drawGenericText charChart "Push"
 
 drawLevel :: Assets -> Level -> Picture
 drawLevel assets lvl@(Level {..})

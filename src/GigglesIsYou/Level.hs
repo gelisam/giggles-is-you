@@ -1,6 +1,8 @@
 {-# LANGUAGE RecordWildCards, ScopedTypeVariables, TupleSections, ViewPatterns #-}
 module GigglesIsYou.Level where
 
+import Prelude hiding (Word)
+
 import Data.Char
 import Data.List
 import Data.Maybe
@@ -14,7 +16,7 @@ import GigglesIsYou.Types
 
 data Entity
   = Object Name
-  | Text Name
+  | Text Word
   deriving (Eq, Show)
 
 data Level = Level
@@ -25,10 +27,14 @@ data Level = Level
 specialChars :: [(Char, Entity)]
 specialChars
   = [ ('G', Object GigglesName)
-    , ('g', Text   GigglesName)
-    , ('S', Object SheetsName)
-    , ('s', Text   SheetsName)
-    , ('t', Text   TextName)
+    , ('g', Text   (NameWord GigglesName))
+    , ('H', Object SheetsName)
+    , ('h', Text   (NameWord SheetsName))
+    , ('t', Text   (NameWord TextName))
+    , ('i', Text   IsWord)
+    , ('y', Text   YouWord)
+    , ('s', Text   StopWord)
+    , ('p', Text   PushWord)
     ]
 
 specialEntities :: [(Entity, Char)]
@@ -52,7 +58,7 @@ parseEntity c
   | isUpper c
     = Just (Object (CharName c))
   | otherwise
-    = Just (Text (CharName (toUpper c)))
+    = Just (Text (NameWord (CharName (toUpper c))))
 
 pprintEntity :: Maybe Entity -> Char
 pprintEntity Nothing
@@ -61,7 +67,7 @@ pprintEntity (Just (isSpecialEntity -> Just c))
   = c
 pprintEntity (Just (Object (CharName c)))
   = c
-pprintEntity (Just (Text (CharName c)))
+pprintEntity (Just (Text (NameWord (CharName c))))
   = toLower c
 pprintEntity x
   = error $ "pprintEntity: pattern-match non-exhaustive: "

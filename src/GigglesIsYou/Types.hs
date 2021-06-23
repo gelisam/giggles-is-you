@@ -14,6 +14,14 @@ data Name
   | CharName Char
   deriving (Eq, Ord, Read, Show)
 
+data Word
+  = NameWord Name
+  | IsWord
+  | YouWord
+  | StopWord
+  | PushWord
+  deriving (Eq, Ord, Read, Show)
+
 type PixelPos = (Float, Float)
 type PixelVector = (Float, Float)
 type PixelSize = (Float, Float)

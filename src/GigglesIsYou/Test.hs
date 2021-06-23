@@ -60,44 +60,44 @@ check expected = MyTest $ do
 walkOntoObstacleMidLevel :: IO ()
 walkOntoObstacleMidLevel
   = runTest [ "   Y  "
-            , ".WXSZ "
+            , ".WXHZ "
             ] $ do
       for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
         enable $ NameIsYou (CharName name)
       enable $ NameIsStop SheetsName
       move E
       check [ "  W   "
-            , ". XSYZ"
+            , ". XHYZ"
             ]
 
 walkOntoObstacleAtWorldsEnd :: IO ()
 walkOntoObstacleAtWorldsEnd
   = runTest [ "   Y "
-            , ".WXSZ"
+            , ".WXHZ"
             ] $ do
       for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
         enable $ NameIsYou (CharName name)
       enable $ NameIsStop SheetsName
       move E
       check [ "  W Y"
-            , ". XSZ"
+            , ". XHZ"
             ]
 
 walkOntoObstacleWhileStop :: IO ()
 walkOntoObstacleWhileStop
   = runTest [ "        G "
-            , ".G GGS GS "
+            , ".G GGH GH "
             ] $ do
       enable $ NameIsYou GigglesName
       enable $ NameIsStop GigglesName
       enable $ NameIsStop SheetsName
       move E
-      check [ ". GGGS GSG"
+      check [ ". GGGH GHG"
             ]
 
 walkOntoObstacleWhileSomeAreStop :: IO ()
 walkOntoObstacleWhileSomeAreStop
-  = runTest [ ".ABS BAS"
+  = runTest [ ".ABH BAH"
             ] $ do
       enable $ NameIsYou (CharName 'A')
       enable $ NameIsYou (CharName 'B')
@@ -105,7 +105,7 @@ walkOntoObstacleWhileSomeAreStop
       enable $ NameIsStop SheetsName
       move E
       check [ "      B "
-            , ".ABS  AS"
+            , ".ABH  AH"
             ]
 
 youAndStopMoveInUnison :: IO ()
@@ -121,19 +121,19 @@ youAndStopMoveInUnison
 
 youAndStopStopInUnison :: IO ()
 youAndStopStopInUnison
-  = runTest [ ".GGGS"
+  = runTest [ ".GGGH"
             ] $ do
       enable $ NameIsYou GigglesName
       enable $ NameIsStop GigglesName
       enable $ NameIsStop SheetsName
       move E
-      check [ ".GGGS"
+      check [ ".GGGH"
             ]
 
 pushTest :: IO ()
 pushTest
   = runTest [ "                      G  G  "
-            , ".GA  GAS GB  GBS GAA  B  BA "
+            , ".GA  GAH GB  GBH GAA  B  BA "
             ] $ do
       enable $ NameIsYou GigglesName
       enable $ NameIsPush (CharName 'A')
@@ -142,7 +142,7 @@ pushTest
       enable $ NameIsStop SheetsName
       move E
       check [ "      G                     "
-            , ". GA  AS  GB GBS  GAA BG BGA"
+            , ". GA  AH  GB GBH  GAA BG BGA"
             ]
 
 testAll :: IO ()
