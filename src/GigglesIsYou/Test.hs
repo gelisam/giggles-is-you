@@ -1,5 +1,7 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, MultiWayIf, RecordWildCards, RecursiveDo #-}
 module GigglesIsYou.Test where
+
+import Prelude hiding (Word)
 
 import Control.Monad.State
 import Control.Monad.Trans.Except
@@ -7,8 +9,10 @@ import Data.Foldable (for_)
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
 import qualified Data.Set as Set
+import qualified Text.Earley as Earley
 
 import GigglesIsYou.Dir
+import GigglesIsYou.Grammar
 import GigglesIsYou.Level
 import GigglesIsYou.Rules
 import GigglesIsYou.Types
@@ -145,6 +149,39 @@ pushTest
             , ". GA  AH  GB GBH  GAA BG BGA"
             ]
 
+
+checkParser
+  :: [Word]
+  -> [Rule]
+  -> IO ()
+checkParser input expected = do
+  let (actual, report)
+        = Earley.fullParses (Earley.parser grammar) input
+  if | Earley.unconsumed report /= [] -> do
+         hPutStrLn stderr $ show report
+         exitFailure
+     | actual /= expected -> do
+         hPutStrLn stderr "expected:"
+         hPutStrLn stderr $ "  " ++ show expected
+         hPutStrLn stderr "actual:"
+         hPutStrLn stderr $ "  " ++ show actual
+         exitFailure
+     | otherwise -> do
+         pure ()
+
+grammarTest :: IO ()
+grammarTest = do
+  checkParser
+    [NameWord GigglesName, IsWord, YouWord]
+    [NameIsYou GigglesName]
+  checkParser
+    [NameWord SheetsName, IsWord, StopWord]
+    [NameIsStop SheetsName]
+  checkParser
+    [NameWord TextName, IsWord, PushWord]
+    [NameIsPush TextName]
+
+
 testAll :: IO ()
 testAll = do
   walkOntoObstacleMidLevel
@@ -154,4 +191,5 @@ testAll = do
   youAndStopMoveInUnison
   youAndStopStopInUnison
   pushTest
+  grammarTest
   putStrLn "PASSED"

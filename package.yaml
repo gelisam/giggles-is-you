@@ -9,6 +9,7 @@ ghc-options:
   - '"-with-rtsopts=-N -T"'
 
 dependencies:
+  - Earley
   - GLUT
   - JuicyPixels
   - OpenGLRaw
