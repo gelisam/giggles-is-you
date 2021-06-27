@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, MultiWayIf, RecordWildCards, RecursiveDo #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, MultiWayIf, RecordWildCards #-}
 module GigglesIsYou.Test where
 
 import Prelude hiding (Word)
