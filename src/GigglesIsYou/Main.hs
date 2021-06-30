@@ -7,12 +7,12 @@ import Control.Monad.Trans.Except
 import Graphics.Gloss hiding (Text)
 import Graphics.Gloss.Interface.IO.Interact hiding (Text)
 import Graphics.Gloss.Juicy
-import qualified Data.Set as Set
 
 import GigglesIsYou.Assets
 import GigglesIsYou.CharChart
 import GigglesIsYou.Dir
 import GigglesIsYou.Draw
+import GigglesIsYou.Grammar
 import GigglesIsYou.Rules
 import GigglesIsYou.Types
 import GigglesIsYou.UI
@@ -35,9 +35,12 @@ mustBeJust (Just a) = pure a
 reactWorld :: Event -> World -> World
 reactWorld (EventKey (SpecialKey (isDirKey -> Just dir)) Down _ _)
            w@(World {..})
-  = w
-  { level = moveYou rules dir level
-  }
+  = let level' = moveYou rules dir level
+        rules' = detectRules level'
+    in w
+       { level = level'
+       , rules = rules'
+       }
 reactWorld _ w
   = w
 
@@ -89,11 +92,7 @@ main' = do
                 ""
                 (World
                   level1
-                  (Set.fromList
-                    [ NameIsYou (CharName 'B')
-                    , NameIsYou GigglesName
-                    , NameIsStop TextName
-                    ])))
+                  (detectRules level1)))
               (displayUI assets)
               reactUI
               (\_ ui -> ui)

@@ -11,6 +11,7 @@ import System.IO (hPutStrLn, stderr)
 import qualified Data.Set as Set
 import qualified Text.Earley as Earley
 
+import GigglesIsYou.Assets
 import GigglesIsYou.Dir
 import GigglesIsYou.Grammar
 import GigglesIsYou.Level
@@ -181,6 +182,19 @@ grammarTest = do
     [NameWord TextName, IsWord, PushWord]
     [NameIsPush TextName]
 
+ruleDetectionTest
+  :: IO ()
+ruleDetectionTest = do
+  let expected = Set.fromList
+        [ NameIsYou GigglesName
+        , NameIsPush TextName
+        ]
+  let actual = detectRules level1
+  when (expected /= actual) $ do
+    hPutStrLn stderr $ "expected: " ++ show expected
+    hPutStrLn stderr $ "expected: " ++ show actual
+    exitFailure
+
 
 testAll :: IO ()
 testAll = do
@@ -192,4 +206,5 @@ testAll = do
   youAndStopStopInUnison
   pushTest
   grammarTest
+  ruleDetectionTest
   putStrLn "PASSED"

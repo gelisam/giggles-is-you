@@ -18,6 +18,7 @@ dependencies:
   - gloss
   - gloss-juicy
   - mtl
+  - safe
   - transformers
 
 library:

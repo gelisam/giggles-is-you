@@ -2,7 +2,13 @@
 {-# OPTIONS -Wno-name-shadowing #-}
 module GigglesIsYou.Rules where
 
+import Prelude hiding (Word)
+
+import Control.Category ((>>>))
+import Data.List (tails)
+import Data.Maybe (catMaybes)
 import Data.Set (Set)
+import Safe.Exact (takeExactMay)
 import qualified Data.Set as Set
 
 import GigglesIsYou.Dir
@@ -123,3 +129,14 @@ moveYou rules dir lvl
             currentActiveCell :: ActiveCell
             currentActiveCell
               = ActiveCell p (isPush rules)
+
+windows
+  :: Int -> [a] -> [[a]]
+windows n
+      -- "abc"
+    = tails
+      -- ["abc", "bc", "c", ""]
+  >>> fmap (takeExactMay n)
+      -- [Just "ab", Just "bc", Nothing, Nothing]
+  >>> catMaybes
+      -- ["ab", "bc"]
