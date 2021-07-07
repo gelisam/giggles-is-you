@@ -18,6 +18,7 @@ import GigglesIsYou.Types
 
 data Subject
   = NameSubject Name
+  | NameOnSubject Name Subject
   deriving (Eq, Ord, Read, Show)
 
 data Rule

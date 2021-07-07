@@ -195,6 +195,11 @@ grammarTest = do
     , nameIsYou SheetsName
     , nameIsPush SheetsName
     ]
+  checkParser
+    [[NameWord GigglesName], [OnWord], [NameWord BName], [IsWord], [YouWord]]
+    [ SubjectIsYou $ NameOnSubject GigglesName $ NameSubject BName
+    , nameIsYou BName
+    ]
 
 ruleDetectionTest
   :: IO ()
