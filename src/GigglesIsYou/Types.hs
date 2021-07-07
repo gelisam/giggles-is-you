@@ -19,6 +19,7 @@ data Name
 data Word
   = NameWord Name
   | IsWord
+  | OnWord
   | YouWord
   | StopWord
   | PushWord

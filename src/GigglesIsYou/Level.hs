@@ -37,6 +37,7 @@ specialChars
     , ('c', Text   (NameWord CName))
     , ('t', Text   (NameWord TextName))
     , ('i', Text   IsWord)
+    , ('o', Text   OnWord)
     , ('y', Text   YouWord)
     , ('s', Text   StopWord)
     , ('p', Text   PushWord)

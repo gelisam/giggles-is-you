@@ -49,6 +49,8 @@ drawSprite (Assets {..}) (Text (NameWord CName))
   = drawGenericText charChart "C"
 drawSprite (Assets {..}) (Text IsWord)
   = drawGenericText charChart "is"
+drawSprite (Assets {..}) (Text OnWord)
+  = drawGenericText charChart "on"
 drawSprite (Assets {..}) (Text YouWord)
   = drawGenericText charChart "You"
 drawSprite (Assets {..}) (Text StopWord)
