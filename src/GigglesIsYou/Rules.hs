@@ -16,28 +16,37 @@ import GigglesIsYou.Level
 import GigglesIsYou.Types
 
 
-data Rule
-  = NameIsPush Name
-  | NameIsStop Name
-  | NameIsYou Name
+data Subject
+  = NameSubject Name
   deriving (Eq, Ord, Read, Show)
 
-hasNameIsRule
-  :: (Name -> Rule)
+data Rule
+  = SubjectIsPush Subject
+  | SubjectIsStop Subject
+  | SubjectIsYou Subject
+  deriving (Eq, Ord, Read, Show)
+
+nameIsPush, nameIsStop, nameIsYou :: Name -> Rule
+nameIsPush = SubjectIsPush . NameSubject
+nameIsStop = SubjectIsStop . NameSubject
+nameIsYou = SubjectIsYou . NameSubject
+
+hasSubjectIsRule
+  :: (Subject -> Rule)
   -> Set Rule -> Entity -> Bool
-hasNameIsRule nameIsRule rules (Object name)
-  = nameIsRule name `Set.member` rules
-hasNameIsRule nameIsRule rules (Text _)
-  = nameIsRule TextName `Set.member` rules
+hasSubjectIsRule subjectIsRule rules (Object name)
+  = subjectIsRule (NameSubject name) `Set.member` rules
+hasSubjectIsRule subjectIsRule rules (Text _)
+  = subjectIsRule (NameSubject TextName) `Set.member` rules
 
 isPush :: Set Rule -> Entity -> Bool
-isPush = hasNameIsRule NameIsPush
+isPush = hasSubjectIsRule SubjectIsPush
 
 isStop :: Set Rule -> Entity -> Bool
-isStop = hasNameIsRule NameIsStop
+isStop = hasSubjectIsRule SubjectIsStop
 
 isYou :: Set Rule -> Entity -> Bool
-isYou = hasNameIsRule NameIsYou
+isYou = hasSubjectIsRule SubjectIsYou
 
 -- an active cell, that is, a cell containing some entities which move in the
 -- direction the player pressed.

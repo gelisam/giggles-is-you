@@ -20,11 +20,15 @@ grammar
   :: Grammar r (Prod r String [Word] Rule)
 grammar = mdo
   rule_ <- rule
-     $ NameIsPush <$> name <* word IsWord <* word PushWord
-   <|> NameIsStop <$> name <* word IsWord <* word StopWord
-   <|> NameIsYou  <$> name <* word IsWord <* word YouWord
+     $ SubjectIsPush <$> subject <* word IsWord <* word PushWord
+   <|> SubjectIsStop <$> subject <* word IsWord <* word StopWord
+   <|> SubjectIsYou  <$> subject <* word IsWord <* word YouWord
   rule $ many skip *> rule_ <* many skip
   where
+    subject :: Prod r e [Word] Subject
+    subject
+      = NameSubject <$> name
+
     name :: Prod r e [Word] Name
     name = asum
       [ name_ <$ word (NameWord name_)

@@ -67,11 +67,11 @@ walkOntoObstacleMidLevel
   = runTest [ "   B  "
             , ".GAHC "
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsYou AName
-      enable $ NameIsYou BName
-      enable $ NameIsYou CName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsYou AName
+      enable $ nameIsYou BName
+      enable $ nameIsYou CName
+      enable $ nameIsStop SheetsName
       move E
       check [ "  G   "
             , ". AHBC"
@@ -82,11 +82,11 @@ walkOntoObstacleAtWorldsEnd
   = runTest [ "   B "
             , ".GAHC"
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsYou AName
-      enable $ NameIsYou BName
-      enable $ NameIsYou CName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsYou AName
+      enable $ nameIsYou BName
+      enable $ nameIsYou CName
+      enable $ nameIsStop SheetsName
       move E
       check [ "  G B"
             , ". AHC"
@@ -97,9 +97,9 @@ walkOntoObstacleWhileStop
   = runTest [ "        G "
             , ".G GGH GH "
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsStop GigglesName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsStop GigglesName
+      enable $ nameIsStop SheetsName
       move E
       check [ ". GGGH GHG"
             ]
@@ -108,10 +108,10 @@ walkOntoObstacleWhileSomeAreStop :: IO ()
 walkOntoObstacleWhileSomeAreStop
   = runTest [ ".ABH BAH"
             ] $ do
-      enable $ NameIsYou AName
-      enable $ NameIsYou BName
-      enable $ NameIsStop BName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou AName
+      enable $ nameIsYou BName
+      enable $ nameIsStop BName
+      enable $ nameIsStop SheetsName
       move E
       check [ "      B "
             , ".ABH  AH"
@@ -122,8 +122,8 @@ youAndStopMoveInUnison
   = runTest [ "     "
             , ".GGG "
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsStop GigglesName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsStop GigglesName
       move E
       check [ ". GGG"
             ]
@@ -132,9 +132,9 @@ youAndStopStopInUnison :: IO ()
 youAndStopStopInUnison
   = runTest [ ".GGGH"
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsStop GigglesName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsStop GigglesName
+      enable $ nameIsStop SheetsName
       move E
       check [ ".GGGH"
             ]
@@ -144,11 +144,11 @@ pushTest
   = runTest [ "                      G  G  "
             , ".GA  GAH GB  GBH GAA  B  BA "
             ] $ do
-      enable $ NameIsYou GigglesName
-      enable $ NameIsPush AName
-      enable $ NameIsPush BName
-      enable $ NameIsStop BName
-      enable $ NameIsStop SheetsName
+      enable $ nameIsYou GigglesName
+      enable $ nameIsPush AName
+      enable $ nameIsPush BName
+      enable $ nameIsStop BName
+      enable $ nameIsStop SheetsName
       move E
       check [ "      G                     "
             , ". GA  AH  GB GBH  GAA BG BGA"
@@ -178,30 +178,30 @@ grammarTest :: IO ()
 grammarTest = do
   checkParser
     [[NameWord GigglesName], [IsWord], [YouWord]]
-    [NameIsYou GigglesName]
+    [nameIsYou GigglesName]
   checkParser
     [[NameWord SheetsName], [IsWord], [StopWord]]
-    [NameIsStop SheetsName]
+    [nameIsStop SheetsName]
   checkParser
     [[NameWord TextName], [IsWord], [PushWord]]
-    [NameIsPush TextName]
+    [nameIsPush TextName]
   checkParser
     [ [NameWord GigglesName, NameWord SheetsName]
     , [IsWord, StopWord]
     , [YouWord, PushWord]
     ]
-    [ NameIsYou GigglesName
-    , NameIsPush GigglesName
-    , NameIsYou SheetsName
-    , NameIsPush SheetsName
+    [ nameIsYou GigglesName
+    , nameIsPush GigglesName
+    , nameIsYou SheetsName
+    , nameIsPush SheetsName
     ]
 
 ruleDetectionTest
   :: IO ()
 ruleDetectionTest = do
   let expected = Set.fromList
-        [ NameIsYou GigglesName
-        , NameIsPush TextName
+        [ nameIsYou GigglesName
+        , nameIsPush TextName
         ]
   let actual = detectRules level1
   when (expected /= actual) $ do
