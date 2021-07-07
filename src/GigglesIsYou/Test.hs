@@ -197,7 +197,7 @@ grammarTest = do
     ]
   checkParser
     [[NameWord GigglesName], [OnWord], [NameWord BName], [IsWord], [YouWord]]
-    [ SubjectIsYou $ NameOnSubject GigglesName $ NameSubject BName
+    [ (GigglesName `On` NameSubject BName) `Is` You
     , nameIsYou BName
     ]
 

@@ -21,11 +21,11 @@ grammar
 grammar = mdo
   subject <- rule
      $ NameSubject <$> name
-   <|> NameOnSubject <$> (name <* word OnWord) <*> subject
+   <|> On <$> (name <* word OnWord) <*> subject
   rule_ <- rule
-     $ SubjectIsPush <$> subject <* word IsWord <* word PushWord
-   <|> SubjectIsStop <$> subject <* word IsWord <* word StopWord
-   <|> SubjectIsYou  <$> subject <* word IsWord <* word YouWord
+     $ Is <$> (subject <* word IsWord) <*> (Push <$ word PushWord)
+   <|> Is <$> (subject <* word IsWord) <*> (Stop <$ word StopWord)
+   <|> Is <$> (subject <* word IsWord) <*> (You  <$ word YouWord)
   rule $ many skip *> rule_ <* many skip
   where
     name :: Prod r e [Word] Name
