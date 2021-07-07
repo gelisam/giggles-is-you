@@ -156,7 +156,7 @@ pushTest
 
 
 checkParser
-  :: [Word]
+  :: [[Word]]
   -> [Rule]
   -> IO ()
 checkParser input expected = do
@@ -165,11 +165,11 @@ checkParser input expected = do
   if | Earley.unconsumed report /= [] -> do
          hPutStrLn stderr $ show report
          exitFailure
-     | actual /= expected -> do
+     | Set.fromList actual /= Set.fromList expected -> do
          hPutStrLn stderr "expected:"
-         hPutStrLn stderr $ "  " ++ show expected
+         hPutStrLn stderr $ "  " ++ show (Set.fromList expected)
          hPutStrLn stderr "actual:"
-         hPutStrLn stderr $ "  " ++ show actual
+         hPutStrLn stderr $ "  " ++ show (Set.fromList actual)
          exitFailure
      | otherwise -> do
          pure ()
@@ -177,14 +177,24 @@ checkParser input expected = do
 grammarTest :: IO ()
 grammarTest = do
   checkParser
-    [NameWord GigglesName, IsWord, YouWord]
+    [[NameWord GigglesName], [IsWord], [YouWord]]
     [NameIsYou GigglesName]
   checkParser
-    [NameWord SheetsName, IsWord, StopWord]
+    [[NameWord SheetsName], [IsWord], [StopWord]]
     [NameIsStop SheetsName]
   checkParser
-    [NameWord TextName, IsWord, PushWord]
+    [[NameWord TextName], [IsWord], [PushWord]]
     [NameIsPush TextName]
+  checkParser
+    [ [NameWord GigglesName, NameWord SheetsName]
+    , [IsWord, StopWord]
+    , [YouWord, PushWord]
+    ]
+    [ NameIsYou GigglesName
+    , NameIsPush GigglesName
+    , NameIsYou SheetsName
+    , NameIsPush SheetsName
+    ]
 
 ruleDetectionTest
   :: IO ()

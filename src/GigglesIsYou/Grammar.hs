@@ -4,6 +4,8 @@ module GigglesIsYou.Grammar where
 import Prelude hiding (Word)
 
 import Control.Applicative
+import Control.Monad (guard)
+import Data.Foldable (asum)
 import Data.Set (Set)
 import Text.Earley
 import qualified Data.Set as Set
@@ -15,20 +17,30 @@ import GigglesIsYou.Types
 
 
 grammar
-  :: Grammar r (Prod r String Word Rule)
+  :: Grammar r (Prod r String [Word] Rule)
 grammar = mdo
-  rule $ NameIsPush <$> name <* token IsWord <* token PushWord
-     <|> NameIsStop <$> name <* token IsWord <* token StopWord
-     <|> NameIsYou  <$> name <* token IsWord <* token YouWord
+  rule_ <- rule
+     $ NameIsPush <$> name <* word IsWord <* word PushWord
+   <|> NameIsStop <$> name <* word IsWord <* word StopWord
+   <|> NameIsYou  <$> name <* word IsWord <* word YouWord
+  rule $ many skip *> rule_ <* many skip
   where
-    name :: Prod r e Word Name
-    name = terminal $ \case
-      NameWord word
-        -> Just word
-      _ -> Nothing
+    name :: Prod r e [Word] Name
+    name = asum
+      [ name_ <$ word (NameWord name_)
+      | name_ <- [minBound..maxBound]
+      ]
+
+    word :: Word -> Prod r e [Word] ()
+    word w = terminal $ \ws -> do
+      guard (w `elem` ws)
+
+    skip :: Prod r e [Word] ()
+    skip = terminal $ \_ -> do
+      pure ()
 
 parseWords
-  :: [Word] -> [Rule]
+  :: [[Word]] -> [Rule]
 parseWords
   = fst
   . fullParses (parser grammar)
@@ -41,10 +53,7 @@ detectRules lvl
       [ rule_
       | dir <- [E, S]
       , row <- directedLevelIndices dir lvl
-      , threeCells <- windows 3 row
-      , let wordsList = fmap getWords threeCells
-      , input <- sequenceA wordsList
-      , rule_ <- parseWords input
+      , rule_ <- parseWords (fmap getWords row)
       ]
   where
     getWords :: CellPos -> [Word]

@@ -14,7 +14,7 @@ data Name
   | AName
   | BName
   | CName
-  deriving (Eq, Ord, Read, Show)
+  deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 data Word
   = NameWord Name
