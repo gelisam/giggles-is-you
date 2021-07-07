@@ -11,7 +11,9 @@ data Name
   = GigglesName
   | SheetsName
   | TextName
-  | CharName Char
+  | AName
+  | BName
+  | CName
   deriving (Eq, Ord, Read, Show)
 
 data Word

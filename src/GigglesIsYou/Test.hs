@@ -64,28 +64,32 @@ check expected = MyTest $ do
 
 walkOntoObstacleMidLevel :: IO ()
 walkOntoObstacleMidLevel
-  = runTest [ "   Y  "
-            , ".WXHZ "
+  = runTest [ "   B  "
+            , ".GAHC "
             ] $ do
-      for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
-        enable $ NameIsYou (CharName name)
+      enable $ NameIsYou GigglesName
+      enable $ NameIsYou AName
+      enable $ NameIsYou BName
+      enable $ NameIsYou CName
       enable $ NameIsStop SheetsName
       move E
-      check [ "  W   "
-            , ". XHYZ"
+      check [ "  G   "
+            , ". AHBC"
             ]
 
 walkOntoObstacleAtWorldsEnd :: IO ()
 walkOntoObstacleAtWorldsEnd
-  = runTest [ "   Y "
-            , ".WXHZ"
+  = runTest [ "   B "
+            , ".GAHC"
             ] $ do
-      for_ ['W', 'X', 'Y', 'Z'] $ \name -> do
-        enable $ NameIsYou (CharName name)
+      enable $ NameIsYou GigglesName
+      enable $ NameIsYou AName
+      enable $ NameIsYou BName
+      enable $ NameIsYou CName
       enable $ NameIsStop SheetsName
       move E
-      check [ "  W Y"
-            , ". XHZ"
+      check [ "  G B"
+            , ". AHC"
             ]
 
 walkOntoObstacleWhileStop :: IO ()
@@ -104,9 +108,9 @@ walkOntoObstacleWhileSomeAreStop :: IO ()
 walkOntoObstacleWhileSomeAreStop
   = runTest [ ".ABH BAH"
             ] $ do
-      enable $ NameIsYou (CharName 'A')
-      enable $ NameIsYou (CharName 'B')
-      enable $ NameIsStop (CharName 'B')
+      enable $ NameIsYou AName
+      enable $ NameIsYou BName
+      enable $ NameIsStop BName
       enable $ NameIsStop SheetsName
       move E
       check [ "      B "
@@ -141,9 +145,9 @@ pushTest
             , ".GA  GAH GB  GBH GAA  B  BA "
             ] $ do
       enable $ NameIsYou GigglesName
-      enable $ NameIsPush (CharName 'A')
-      enable $ NameIsPush (CharName 'B')
-      enable $ NameIsStop (CharName 'B')
+      enable $ NameIsPush AName
+      enable $ NameIsPush BName
+      enable $ NameIsStop BName
       enable $ NameIsStop SheetsName
       move E
       check [ "      G                     "

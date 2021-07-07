@@ -29,16 +29,24 @@ drawSprite (Assets {..}) (Object GigglesName)
   = boxed (128, 127) cellPixelSize giggles
 drawSprite (Assets {..}) (Object TextName)
   = drawGenericObject charChart "Text"
-drawSprite (Assets {..}) (Object (CharName c))
-  = drawGenericObject charChart [c]
+drawSprite (Assets {..}) (Object AName)
+  = drawGenericObject charChart "A"
+drawSprite (Assets {..}) (Object BName)
+  = drawGenericObject charChart "B"
+drawSprite (Assets {..}) (Object CName)
+  = drawGenericObject charChart "C"
 drawSprite (Assets {..}) (Text (NameWord GigglesName))
   = drawGenericText charChart "Giggles"
 drawSprite (Assets {..}) (Text (NameWord SheetsName))
   = drawGenericText charChart "Sheets"
 drawSprite (Assets {..}) (Text (NameWord TextName))
   = drawGenericText charChart "Text"
-drawSprite (Assets {..}) (Text (NameWord (CharName c)))
-  = drawGenericText charChart [c]
+drawSprite (Assets {..}) (Text (NameWord AName))
+  = drawGenericText charChart "A"
+drawSprite (Assets {..}) (Text (NameWord BName))
+  = drawGenericText charChart "B"
+drawSprite (Assets {..}) (Text (NameWord CName))
+  = drawGenericText charChart "C"
 drawSprite (Assets {..}) (Text IsWord)
   = drawGenericText charChart "is"
 drawSprite (Assets {..}) (Text YouWord)

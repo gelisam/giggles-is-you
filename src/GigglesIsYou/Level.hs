@@ -3,7 +3,6 @@ module GigglesIsYou.Level where
 
 import Prelude hiding (Word)
 
-import Data.Char
 import Data.List
 import Data.Maybe
 import Data.Tuple
@@ -30,6 +29,12 @@ specialChars
     , ('g', Text   (NameWord GigglesName))
     , ('H', Object SheetsName)
     , ('h', Text   (NameWord SheetsName))
+    , ('A', Object AName)
+    , ('a', Text   (NameWord AName))
+    , ('B', Object BName)
+    , ('b', Text   (NameWord BName))
+    , ('C', Object CName)
+    , ('c', Text   (NameWord CName))
     , ('t', Text   (NameWord TextName))
     , ('i', Text   IsWord)
     , ('y', Text   YouWord)
@@ -55,20 +60,15 @@ parseEntity ' '
 parseEntity (isSpecialChar -> Just entity)
   = Just entity
 parseEntity c
-  | isUpper c
-    = Just (Object (CharName c))
-  | otherwise
-    = Just (Text (NameWord (CharName (toUpper c))))
+  = error
+  $ "level contains unrecognized character "
+ ++ show c
 
 pprintEntity :: Maybe Entity -> Char
 pprintEntity Nothing
   = ' '
 pprintEntity (Just (isSpecialEntity -> Just c))
   = c
-pprintEntity (Just (Object (CharName c)))
-  = c
-pprintEntity (Just (Text (NameWord (CharName c))))
-  = toLower c
 pprintEntity x
   = error $ "pprintEntity: pattern-match non-exhaustive: "
          ++ show x
