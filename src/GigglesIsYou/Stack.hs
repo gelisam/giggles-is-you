@@ -28,30 +28,30 @@ isName _ _
 newtype Stack a = Stack
   { unStack :: ZipList a  -- top-to-bottom
   }
-  deriving (Functor, Applicative, Foldable)
+  deriving (Show, Functor, Applicative)
 
 
 fromTopToBottom
-  :: [Entity]
-  -> Stack Entity
+  :: [a]
+  -> Stack a
 fromTopToBottom
   = Stack . ZipList
 
 fromBottomToTop
-  :: [Entity]
-  -> Stack Entity
+  :: [a]
+  -> Stack a
 fromBottomToTop
   = fromTopToBottom . reverse
 
 toTopToBottom
-  :: Stack Entity
-  -> [Entity]
+  :: Stack a
+  -> [a]
 toTopToBottom
   = getZipList . unStack
 
 toBottomToTop
-  :: Stack Entity
-  -> [Entity]
+  :: Stack a
+  -> [a]
 toBottomToTop
   = reverse . toTopToBottom
 
@@ -142,7 +142,7 @@ selectsAny
   -> Stack Entity  -- ^ to make sure the ZipList is finite
   -> Bool
 selectsAny f es
-  = or (f es <* es)
+  = or $ toTopToBottom (f es <* es)
 
 selectsNone
   :: (Stack Entity -> Stack Bool)
