@@ -10,18 +10,12 @@ import GHC.Arr
 import qualified Data.Map as Map
 
 import GigglesIsYou.Dir
+import GigglesIsYou.Stack
 import GigglesIsYou.Types
 
 
-data Entity
-  = Object Name
-  | Text Word
-  deriving (Eq, Show)
-
-type Stack = [Entity]  -- top to bottom
-
 data Level = Level
-  { levelArray :: Array CellPos [Entity]  -- bottom to top
+  { levelArray :: Array CellPos (Stack Entity)
   , levelList  :: [(Entity, CellPos)]
   }
 
@@ -93,7 +87,7 @@ pprintLevel lvl
   = reverse
   $ concat
   [ zipWith (:) ('.' : repeat ' ')
-  $ pprintRow [ spritesAt lvl (x,y)
+  $ pprintRow [ toBottomToTop $ stackAt lvl (x,y)
               | x <- [x0..xZ]
               ]
   | y <- [y0..yZ]
@@ -101,25 +95,25 @@ pprintLevel lvl
   where
     ((x0,y0), (xZ,yZ)) = levelBounds lvl
 
-parseRow :: [String] -> ([[Entity]], [String])
+parseRow :: [String] -> ([Stack Entity], [String])
 parseRow ((' ' : stringRow) : stringLevel)
   = let (row, stringLevel') = parseRow stringLevel
         entityRow = map parseEntity stringRow
         snoc entityStack Nothing
           = entityStack
         snoc entityStack (Just entity)
-          = entityStack ++ [entity]
+          = addOnTop entity entityStack
         row' = zipWith snoc row entityRow
     in (row', stringLevel')
 parseRow (('.' : stringRow) : stringLevel)
-  = (map (maybeToList . parseEntity) stringRow, stringLevel)
+  = (map (fromTopToBottom . maybeToList . parseEntity) stringRow, stringLevel)
 parseRow stringLevel
   = error $ "expected a row beginning with ' ' or '.', found "
          ++ show stringLevel
 
 -- ground floor last in the input,
 -- ground floor first in the output.
-parseRows :: [String] -> [[[Entity]]]
+parseRows :: [String] -> [[Stack Entity]]
 parseRows []
   = []
 parseRows stringLevel
@@ -132,14 +126,14 @@ parseLevel :: [String] -> Level
 parseLevel = convertLevel . parseRows
 
 -- biggest Y first.
-convertLevel :: [[[Entity]]] -> Level
+convertLevel :: [[Stack Entity]] -> Level
 convertLevel rows = Level {..}
   where
     stringLevelCellSize :: CellSize
     stringLevelCellSize
       = (length (head rows), length rows)
 
-    levelArray :: Array CellPos [Entity]
+    levelArray :: Array CellPos (Stack Entity)
     levelArray = array ((0,0), stringLevelCellSize - 1)
       [ ((x,y), entityStack)
       | (y, row) <- zip [0..] (reverse rows)
@@ -149,18 +143,15 @@ convertLevel rows = Level {..}
     levelList :: [(Entity, CellPos)]
     levelList = autoLevelList levelArray
 
-autoLevelList :: Array CellPos [Entity] -> [(Entity, CellPos)]
+autoLevelList :: Array CellPos (Stack Entity) -> [(Entity, CellPos)]
 autoLevelList lvlArray =
   [ (e, i)
   | (i, es) <- assocs lvlArray
-  , e <- es
+  , e <- toTopToBottom es
   ]
 
-spritesAt :: Level -> CellPos -> [Entity]
-spritesAt (Level {..}) p = levelArray ! p
-
-stackAt :: Level -> CellPos -> Stack
-stackAt lvl = reverse . spritesAt lvl
+stackAt :: Level -> CellPos -> Stack Entity
+stackAt (Level {..}) p = levelArray ! p
 
 findSprite :: Entity -> Level -> Maybe CellPos
 findSprite name (Level {..}) = lookup name levelList
@@ -239,36 +230,31 @@ es /// ifs = es // ies
     if2ie (i, f) = (i, f (es ! i))
 
 moveSpritesTo
-  :: [(CellPos, Stack -> Bool, CellPos)]
+  :: [(CellPos, Stack Bool, CellPos)]
   -> Level
   -> Level
 moveSpritesTo moves lvl@(Level {..}) =
-  let removed :: [(CellPos, [Entity] -> [Entity])]
+  let removed :: [(CellPos, Stack Entity -> Stack Entity)]
       removed
-        = [ (src, mapMaybe listToMaybe . filter (not . isMoving) . tails . reverse)
-          | (src, isMoving, _dst) <- moves
+        = [ (src, dropSelection selection)
+          | (src, selection, _dst) <- moves
           ]
 
-      added :: [(CellPos, [Entity])]
+      added :: [(CellPos, Stack Entity)]
       added
         = [ (dst, addedEntities)
-          | (src, isMoving, dst) <- moves
-          , let addedEntities
-                  = reverse
-                  $ fmap head
-                  $ filter isMoving
-                  $ tails
-                  $ stackAt lvl src
+          | (src, selection, dst) <- moves
+          , let addedEntities = takeSelection selection (stackAt lvl src)
           ]
 
-      assocs_ :: [(CellPos, Stack -> Stack)]
+      assocs_ :: [(CellPos, Stack Entity -> Stack Entity)]
       assocs_
         = removed
-       ++ [ (p, (++ es))
-          | (p, es) <- added
+       ++ [ (p, addStackOnTop addedEntities)
+          | (p, addedEntities) <- added
           ]
 
-      levelArray' :: Array CellPos [Entity]
+      levelArray' :: Array CellPos (Stack Entity)
       levelArray' = levelArray /// assocs_
 
       levelList' :: [(Entity, CellPos)]

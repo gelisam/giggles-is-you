@@ -13,6 +13,7 @@ import qualified Data.Set as Set
 
 import GigglesIsYou.Dir
 import GigglesIsYou.Level
+import GigglesIsYou.Stack
 import GigglesIsYou.Types
 
 
@@ -36,64 +37,44 @@ nameIsPush name = NameSubject name `Is` Push
 nameIsStop name = NameSubject name `Is` Stop
 nameIsYou  name = NameSubject name `Is` You
 
-isName
-  :: Name
-  -> Entity
-  -> Bool
-isName expected (Object actual)
-  = actual == expected
-isName TextName (Text _)
-  = True
-isName _ _
-  = False
+selectSubject
+  :: Subject
+  -> Stack Entity
+  -> Stack Bool
+selectSubject (NameSubject name) stack
+  = selectName name stack
+selectSubject (name `On` subject) stack
+    = (&&)
+  <$> selectBelowLt (selectName name stack)
+  <*> selectSubject subject stack
 
-data ExpectedLocation
-  = OnTop
-  | Anywhere
-  deriving (Eq, Show)
-
-stackHasSubject
-  :: ExpectedLocation
-  -> Subject
-  -> Stack
-  -> Bool
-stackHasSubject Anywhere subject stack
-  = any (stackHasSubject OnTop subject) (tails stack)
-stackHasSubject OnTop (NameSubject name) (entity : _)
-  = isName name entity
-stackHasSubject OnTop (name `On` subject) (entity : stack)
-  = isName name entity
- && stackHasSubject Anywhere subject stack
-stackHasSubject _ _ _
-  = False
-
-stackHasAdjective
+selectAdjective
   :: Adjective
-  -> ExpectedLocation
   -> Set Rule
-  -> Stack
-  -> Bool
-stackHasAdjective expectedAdjective expectedLocation rules stack
-  = or
-      [ stackHasSubject expectedLocation subject stack
+  -> Stack Entity
+  -> Stack Bool
+selectAdjective expectedAdjective rules stack
+  = fmap and
+  $ sequenceA
+      [ selectSubject subject stack
       | subject `Is` actualAdjective <- Set.toList rules
       , actualAdjective == expectedAdjective
       ]
 
-stackHasPush :: ExpectedLocation -> Set Rule -> Stack -> Bool
-stackHasPush = stackHasAdjective Push
+selectPush :: Set Rule -> Stack Entity -> Stack Bool
+selectPush = selectAdjective Push
 
-stackHasStop :: ExpectedLocation -> Set Rule -> Stack -> Bool
-stackHasStop = stackHasAdjective Stop
+selectStop :: Set Rule -> Stack Entity -> Stack Bool
+selectStop = selectAdjective Stop
 
-stackHasYou :: ExpectedLocation -> Set Rule -> Stack -> Bool
-stackHasYou = stackHasAdjective You
+selectYou :: Set Rule -> Stack Entity -> Stack Bool
+selectYou = selectAdjective You
 
 -- an active cell, that is, a cell containing some entities which move in the
 -- direction the player pressed.
 data ActiveCell = ActiveCell
   { activeCellPos :: CellPos
-  , isActive :: Stack -> Bool
+  , isActive :: Stack Bool
   }
 
 type Chunk = [ActiveCell]
@@ -117,42 +98,37 @@ moveYou rules dir lvl
           rowChunks
           (directedLevelIndices (flipDir dir) lvl)
 
-    stackHasNonPushStopOnTop :: Stack -> Bool
-    stackHasNonPushStopOnTop e
-      = stackHasStop OnTop rules e
-     && not (stackHasPush OnTop rules e)
+    selectNonPushStop :: Stack Entity -> Stack Bool
+    selectNonPushStop stack
+        = (&&)
+      <$> selectStop rules stack
+      <*> (not <$> selectPush rules stack)
 
-    stackHasNonYouStopOnTop :: Stack -> Bool
-    stackHasNonYouStopOnTop e
-      = stackHasStop OnTop rules e
-     && not (stackHasYou OnTop rules e)
+    selectNonYouStop :: Stack Entity -> Stack Bool
+    selectNonYouStop stack
+        = (&&)
+      <$> selectStop rules stack
+      <*> (not <$> selectYou rules stack)
 
     hasNonPushStops :: CellPos -> Bool
-    hasNonPushStops p
-      = any stackHasNonPushStopOnTop 
-      $ tails
-      $ stackAt lvl p
+    hasNonPushStops
+      = selectsAny . selectNonPushStop . stackAt lvl
 
     hasNonYouStops :: CellPos -> Bool
-    hasNonYouStops p
-      = any stackHasNonYouStopOnTop
-      $ tails
-      $ stackAt lvl p
+    hasNonYouStops
+      = selectsAny . selectNonYouStop . stackAt lvl
 
     hasPushes :: CellPos -> Bool
-    hasPushes p
-      = stackHasPush Anywhere rules
-      $ stackAt lvl p
+    hasPushes
+      = selectsAny . selectPush rules . stackAt lvl
 
     hasStops :: CellPos -> Bool
-    hasStops p
-      = stackHasStop Anywhere rules
-      $ stackAt lvl p
+    hasStops
+      = selectsAny . selectStop rules . stackAt lvl
 
     hasYous :: CellPos -> Bool
-    hasYous p
-      = stackHasYou Anywhere rules
-      $ stackAt lvl p
+    hasYous
+      = selectsAny . selectYou rules . stackAt lvl
 
     -- the active cells within the row
     rowChunks :: [CellPos] -> [Chunk]
@@ -167,7 +143,7 @@ moveYou rules dir lvl
           = go (if hasStops p then Nothing else Just []) ps
         go (Just chunk) (p:ps)
           | hasYous p
-            = (ActiveCell p (stackHasYou OnTop rules) : chunk)
+            = (ActiveCell p (selectYou rules stack) : chunk)
             : go (if hasNonYouStops p
                   then Nothing
                   else Just [currentActiveCell])
@@ -183,9 +159,13 @@ moveYou rules dir lvl
                   else Just [])
                  ps
           where
+            stack :: Stack Entity
+            stack
+              = stackAt lvl p
+
             currentActiveCell :: ActiveCell
             currentActiveCell
-              = ActiveCell p (stackHasPush OnTop rules)
+              = ActiveCell p (selectPush rules stack)
 
 windows
   :: Int -> [a] -> [[a]]

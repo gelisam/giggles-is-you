@@ -13,6 +13,7 @@ import qualified Data.Set as Set
 import GigglesIsYou.Dir
 import GigglesIsYou.Level
 import GigglesIsYou.Rules
+import GigglesIsYou.Stack
 import GigglesIsYou.Types
 
 
@@ -62,5 +63,5 @@ detectRules lvl
     getWords :: CellPos -> [Word]
     getWords p =
       [ word
-      | Text word <- spritesAt lvl p
+      | Text word <- toTopToBottom $ stackAt lvl p
       ]

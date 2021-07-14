@@ -8,6 +8,7 @@ import GigglesIsYou.Assets
 import GigglesIsYou.CharChart
 import GigglesIsYou.Level
 import GigglesIsYou.Pictures
+import GigglesIsYou.Stack
 import GigglesIsYou.Types
 import GigglesIsYou.UI
 import GigglesIsYou.World
