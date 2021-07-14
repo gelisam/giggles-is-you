@@ -138,13 +138,15 @@ dropSelection
   = takeSelection . fmap not
 
 selectsAny
-  :: Stack Bool
+  :: (Stack Entity -> Stack Bool)
+  -> Stack Entity  -- ^ to make sure the ZipList is finite
   -> Bool
-selectsAny
-  = or
+selectsAny f es
+  = or (f es <* es)
 
 selectsNone
-  :: Stack Bool
+  :: (Stack Entity -> Stack Bool)
+  -> Stack Entity  -- ^ to make sure the ZipList is finite
   -> Bool
-selectsNone
-  = not . selectsAny
+selectsNone f
+  = not . selectsAny f

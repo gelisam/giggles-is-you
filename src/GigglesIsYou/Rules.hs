@@ -112,23 +112,23 @@ moveYou rules dir lvl
 
     hasNonPushStops :: CellPos -> Bool
     hasNonPushStops
-      = selectsAny . selectNonPushStop . stackAt lvl
+      = selectsAny selectNonPushStop . stackAt lvl
 
     hasNonYouStops :: CellPos -> Bool
     hasNonYouStops
-      = selectsAny . selectNonYouStop . stackAt lvl
+      = selectsAny selectNonYouStop . stackAt lvl
 
     hasPushes :: CellPos -> Bool
     hasPushes
-      = selectsAny . selectPush rules . stackAt lvl
+      = selectsAny (selectPush rules) . stackAt lvl
 
     hasStops :: CellPos -> Bool
     hasStops
-      = selectsAny . selectStop rules . stackAt lvl
+      = selectsAny (selectStop rules) . stackAt lvl
 
     hasYous :: CellPos -> Bool
     hasYous
-      = selectsAny . selectYou rules . stackAt lvl
+      = selectsAny (selectYou rules) . stackAt lvl
 
     -- the active cells within the row
     rowChunks :: [CellPos] -> [Chunk]
