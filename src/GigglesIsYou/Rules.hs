@@ -54,7 +54,7 @@ selectAdjective
   -> Stack Entity
   -> Stack Bool
 selectAdjective expectedAdjective rules stack
-  = fmap and
+  = fmap or
   $ sequenceA
       [ selectSubject subject stack
       | subject `Is` actualAdjective <- Set.toList rules
