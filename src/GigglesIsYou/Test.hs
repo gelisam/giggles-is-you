@@ -154,6 +154,24 @@ pushTest
             , ". GA  AH  GB GBH  GAA BG BGA"
             ]
 
+onTest :: IO ()
+onTest
+  = runTest [ "       A  A  A "
+            , "       A  C  B "
+            , "       A  A  A "
+            , "       A  B  B "
+            , " A  B  B  A  A "
+            , ".B  A  C  A  C "
+            ] $ do
+      enable $ (AName `On` NameSubject BName `Is` You)
+      enable $ (BName `On` (AName `On` NameSubject AName) `Is` You)
+      move E
+      check [ "        A      "
+            , "        A CA BA"
+            , "    B  BA AA AB"
+            , ".BA A  CA AB CA"
+            ]
+
 
 checkParser
   :: [[Word]]
@@ -206,7 +224,8 @@ ruleDetectionTest
 ruleDetectionTest = do
   let expected = Set.fromList
         [ nameIsYou GigglesName
-        , nameIsPush TextName
+        , SheetsName `On` NameSubject GigglesName `Is` You
+        , NameSubject TextName `Is` Push
         ]
   let actual = detectRules level1
   when (expected /= actual) $ do
@@ -224,6 +243,7 @@ testAll = do
   youAndStopMoveInUnison
   youAndStopStopInUnison
   pushTest
+  onTest
   grammarTest
   ruleDetectionTest
   putStrLn "PASSED"

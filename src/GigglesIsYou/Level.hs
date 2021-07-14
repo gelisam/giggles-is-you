@@ -245,7 +245,7 @@ moveSpritesTo
 moveSpritesTo moves lvl@(Level {..}) =
   let removed :: [(CellPos, [Entity] -> [Entity])]
       removed
-        = [ (src, fmap head . filter (not . isMoving) . tails . reverse)
+        = [ (src, mapMaybe listToMaybe . filter (not . isMoving) . tails . reverse)
           | (src, isMoving, _dst) <- moves
           ]
 
