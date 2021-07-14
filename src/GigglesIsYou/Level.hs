@@ -18,6 +18,8 @@ data Entity
   | Text Word
   deriving (Eq, Show)
 
+type Stack = [Entity]  -- top to bottom
+
 data Level = Level
   { levelArray :: Array CellPos [Entity]  -- bottom to top
   , levelList  :: [(Entity, CellPos)]
@@ -145,14 +147,20 @@ convertLevel rows = Level {..}
       ]
 
     levelList :: [(Entity, CellPos)]
-    levelList =
-      [ (e, i)
-      | (i, es) <- assocs levelArray
-      , e <- es
-      ]
+    levelList = autoLevelList levelArray
+
+autoLevelList :: Array CellPos [Entity] -> [(Entity, CellPos)]
+autoLevelList lvlArray =
+  [ (e, i)
+  | (i, es) <- assocs lvlArray
+  , e <- es
+  ]
 
 spritesAt :: Level -> CellPos -> [Entity]
 spritesAt (Level {..}) p = levelArray ! p
+
+stackAt :: Level -> CellPos -> Stack
+stackAt lvl = reverse . spritesAt lvl
 
 findSprite :: Entity -> Level -> Maybe CellPos
 findSprite name (Level {..}) = lookup name levelList
@@ -231,49 +239,41 @@ es /// ifs = es // ies
     if2ie (i, f) = (i, f (es ! i))
 
 moveSpritesTo
-  :: [(CellPos, Entity -> Bool, CellPos)]
+  :: [(CellPos, Stack -> Bool, CellPos)]
   -> Level
   -> Level
-moveSpritesTo moves (Level {..}) =
+moveSpritesTo moves lvl@(Level {..}) =
   let removed :: [(CellPos, [Entity] -> [Entity])]
       removed
-        = [ (src, filter (not . isMoving))
+        = [ (src, fmap head . filter (not . isMoving) . tails . reverse)
           | (src, isMoving, _dst) <- moves
           ]
 
       added :: [(CellPos, [Entity])]
       added
-        = [ (dst, entityStack)
+        = [ (dst, addedEntities)
           | (src, isMoving, dst) <- moves
-          , let entityStack = filter isMoving (levelArray ! src)
+          , let addedEntities
+                  = reverse
+                  $ fmap head
+                  $ filter isMoving
+                  $ tails
+                  $ stackAt lvl src
           ]
 
-      assocs_ :: [(CellPos, [Entity] -> [Entity])]
+      assocs_ :: [(CellPos, Stack -> Stack)]
       assocs_
         = removed
        ++ [ (p, (++ es))
           | (p, es) <- added
           ]
 
-      isListEntryMoving :: (Entity, CellPos) -> Bool
-      isListEntryMoving (e, p)
-        = any isThisListEntryMoving moves
-        where
-          isThisListEntryMoving
-            :: (CellPos, Entity -> Bool, CellPos)
-            -> Bool
-          isThisListEntryMoving (src, isMoving, _dst)
-            = src == p
-           && isMoving e
+      levelArray' :: Array CellPos [Entity]
+      levelArray' = levelArray /// assocs_
 
       levelList' :: [(Entity, CellPos)]
-      levelList'
-        = [ (e, p)
-          | (p, es) <- added
-          , e <- es
-          ]
-       ++ filter (not . isListEntryMoving) levelList
+      levelList' = autoLevelList levelArray'
   in Level
-       { levelArray = levelArray /// assocs_
+       { levelArray = levelArray'
        , levelList  = levelList'
        }

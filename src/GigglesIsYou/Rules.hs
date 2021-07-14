@@ -36,28 +36,64 @@ nameIsPush name = NameSubject name `Is` Push
 nameIsStop name = NameSubject name `Is` Stop
 nameIsYou  name = NameSubject name `Is` You
 
-hasSubjectIsRule
+isName
+  :: Name
+  -> Entity
+  -> Bool
+isName expected (Object actual)
+  = actual == expected
+isName TextName (Text _)
+  = True
+isName _ _
+  = False
+
+data ExpectedLocation
+  = OnTop
+  | Anywhere
+  deriving (Eq, Show)
+
+stackHasSubject
+  :: ExpectedLocation
+  -> Subject
+  -> Stack
+  -> Bool
+stackHasSubject Anywhere subject stack
+  = any (stackHasSubject OnTop subject) (tails stack)
+stackHasSubject OnTop (NameSubject name) (entity : _)
+  = isName name entity
+stackHasSubject OnTop (name `On` subject) (entity : stack)
+  = isName name entity
+ && stackHasSubject Anywhere subject stack
+stackHasSubject _ _ _
+  = False
+
+stackHasAdjective
   :: Adjective
-  -> Set Rule -> Entity -> Bool
-hasSubjectIsRule adjective rules (Object name)
-  = (NameSubject name `Is` adjective) `Set.member` rules
-hasSubjectIsRule adjective rules (Text _)
-  = (NameSubject TextName `Is` adjective) `Set.member` rules
+  -> ExpectedLocation
+  -> Set Rule
+  -> Stack
+  -> Bool
+stackHasAdjective expectedAdjective expectedLocation rules stack
+  = or
+      [ stackHasSubject expectedLocation subject stack
+      | subject `Is` actualAdjective <- Set.toList rules
+      , actualAdjective == expectedAdjective
+      ]
 
-isPush :: Set Rule -> Entity -> Bool
-isPush = hasSubjectIsRule Push
+stackHasPush :: ExpectedLocation -> Set Rule -> Stack -> Bool
+stackHasPush = stackHasAdjective Push
 
-isStop :: Set Rule -> Entity -> Bool
-isStop = hasSubjectIsRule Stop
+stackHasStop :: ExpectedLocation -> Set Rule -> Stack -> Bool
+stackHasStop = stackHasAdjective Stop
 
-isYou :: Set Rule -> Entity -> Bool
-isYou = hasSubjectIsRule You
+stackHasYou :: ExpectedLocation -> Set Rule -> Stack -> Bool
+stackHasYou = stackHasAdjective You
 
 -- an active cell, that is, a cell containing some entities which move in the
 -- direction the player pressed.
 data ActiveCell = ActiveCell
   { activeCellPos :: CellPos
-  , isActive :: Entity -> Bool
+  , isActive :: Stack -> Bool
   }
 
 type Chunk = [ActiveCell]
@@ -81,35 +117,42 @@ moveYou rules dir lvl
           rowChunks
           (directedLevelIndices (flipDir dir) lvl)
 
-    isNonPushStop :: Entity -> Bool
-    isNonPushStop e
-      = isStop rules e
-     && not (isPush rules e)
+    stackHasNonPushStopOnTop :: Stack -> Bool
+    stackHasNonPushStopOnTop e
+      = stackHasStop OnTop rules e
+     && not (stackHasPush OnTop rules e)
 
-    isNonYouStop :: Entity -> Bool
-    isNonYouStop e
-      = isStop rules e
-     && not (isYou rules e)
+    stackHasNonYouStopOnTop :: Stack -> Bool
+    stackHasNonYouStopOnTop e
+      = stackHasStop OnTop rules e
+     && not (stackHasYou OnTop rules e)
 
     hasNonPushStops :: CellPos -> Bool
     hasNonPushStops p
-      = any isNonPushStop (spritesAt lvl p)
+      = any stackHasNonPushStopOnTop 
+      $ tails
+      $ stackAt lvl p
 
     hasNonYouStops :: CellPos -> Bool
     hasNonYouStops p
-      = any isNonYouStop (spritesAt lvl p)
+      = any stackHasNonYouStopOnTop
+      $ tails
+      $ stackAt lvl p
 
     hasPushes :: CellPos -> Bool
     hasPushes p
-      = any (isPush rules) (spritesAt lvl p)
+      = stackHasPush Anywhere rules
+      $ stackAt lvl p
 
     hasStops :: CellPos -> Bool
     hasStops p
-      = any (isStop rules) (spritesAt lvl p)
+      = stackHasStop Anywhere rules
+      $ stackAt lvl p
 
     hasYous :: CellPos -> Bool
     hasYous p
-      = any (isYou rules) (spritesAt lvl p)
+      = stackHasYou Anywhere rules
+      $ stackAt lvl p
 
     -- the active cells within the row
     rowChunks :: [CellPos] -> [Chunk]
@@ -124,7 +167,7 @@ moveYou rules dir lvl
           = go (if hasStops p then Nothing else Just []) ps
         go (Just chunk) (p:ps)
           | hasYous p
-            = (ActiveCell p (isYou rules) : chunk)
+            = (ActiveCell p (stackHasYou OnTop rules) : chunk)
             : go (if hasNonYouStops p
                   then Nothing
                   else Just [currentActiveCell])
@@ -142,7 +185,7 @@ moveYou rules dir lvl
           where
             currentActiveCell :: ActiveCell
             currentActiveCell
-              = ActiveCell p (isPush rules)
+              = ActiveCell p (stackHasPush OnTop rules)
 
 windows
   :: Int -> [a] -> [[a]]
