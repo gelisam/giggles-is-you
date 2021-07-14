@@ -118,6 +118,42 @@ selectBelowLt (Stack (ZipList bs0))
     go (False : bs)
       = False : go bs
 
+selectAboveGeq
+  :: Stack Bool
+  -> Stack Bool
+selectAboveGeq (Stack (ZipList bs0))
+  = Stack (ZipList (go bs0))
+  where
+    go :: [Bool] -> [Bool]
+    go []
+      = []
+    go (True : bs)
+      = True : go bs
+    go (b : bs)
+      = case go bs of
+          bs'@(True : _)
+            -> True : bs'
+          bs'
+            -> b : bs'
+
+selectAboveGt
+  :: Stack Bool
+  -> Stack Bool
+selectAboveGt (Stack (ZipList bs0))
+  = Stack (ZipList (go bs0))
+  where
+    go :: [Bool] -> [Bool]
+    go []
+      = []
+    go (_ : bs@(True : _))
+      = True : go bs
+    go (_ : bs)
+      = case go bs of
+          bs'@(True : _)
+            -> True : bs'
+          bs'
+            -> False : bs'
+
 
 takeSelection
   :: Stack Bool

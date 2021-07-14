@@ -45,8 +45,8 @@ selectSubject (NameSubject name) stack
   = selectName name stack
 selectSubject (name `On` subject) stack
     = (&&)
-  <$> selectBelowLt (selectName name stack)
-  <*> selectSubject subject stack
+  <$> selectName name stack
+  <*> selectAboveGt (selectSubject subject stack)
 
 selectAdjective
   :: Adjective
