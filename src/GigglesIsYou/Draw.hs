@@ -66,9 +66,10 @@ drawLevel assets lvl@(Level {..})
   [ translate2D p $ ( color (greyN 0.8)
                     $ uncurry rectangleWire cellPixelSize
                     )
-                 <> foldMap (drawSprite assets) (levelArray ! (i,j))
+                 <> foldMap (drawSprite assets) (toBottomToTop stack)
   | (i,j) <- indices levelArray
   , let p = cellPixelSize * (fromIntegral i, fromIntegral j)
+  , let stack = stackAt lvl (i,j)
   ]
 
 totalPixelSize :: Level -> PixelSize
